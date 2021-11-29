@@ -1,7 +1,6 @@
 from datetime import date
 
 from views import Index, Basket, History, IndexNew, Admin
-from variables import DIRECTION
 
 
 # front controllers
@@ -17,9 +16,9 @@ fronts = [secret_front, other_front]
 
 routes = {
     '/': Index(),
-    '/index.html/': Index(),
-    '/index-new.html/': IndexNew(),
-    '/basket.html/': Basket(),
-    '/history.html/': History(),
-    '/admin.html/': Admin(),
+    '/index/': Index(),
+    '/index-new/': IndexNew(),
+    '/basket/': Basket(),
+    '/history/': History(),
+    '/admin/': Admin(),
 }

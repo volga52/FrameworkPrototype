@@ -1,5 +1,0 @@
-ID = 'id_elem'
-NAME = 'name'
-DIRECTION = 'direction'
-STATUS = 'status'
-PRICE = 'price'

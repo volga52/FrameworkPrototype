@@ -90,7 +90,7 @@ class Engine:
         self.class_ap = []
         self.free_seats = 0
         self.locations = []
-        self.directions =[]
+        self.directions = []
 
     @staticmethod
     def create_user(type_):
