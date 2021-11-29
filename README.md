@@ -1,1 +1,1 @@
-FrameworkPrototype
+Framework_self

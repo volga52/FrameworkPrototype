@@ -1,0 +1,245 @@
+<script type="text/javascript">
+    class GoodsItem {
+        constructor(good) {
+            this.good = good;
+        }
+
+        render() {
+            let data = JSON.stringify(this.good);
+
+            return `
+    <div class="good item-catalog">
+        <img src="#" alt="Photo" height="120" wight="120" class="image">
+        <div>
+            <div><b>Наименование</b>: ${this.good.product_name}</div>
+            <div><b>Цена за штуку</b>: ${this.good.price}</div>
+            <button class="addToBasket-btn" data-id_product="${this.good.id_product}">Добавить в корзину</button>
+            <div>Категория: ${this.good.direction}</div>
+        </div>
+    </div>`;
+        }
+    }
+
+    class GoodsList {
+        _cart = new Cart;
+
+        constructor(products_list) {
+            this.goods = products_list
+            this.goodsListBlock = null;
+        }
+
+        init() {
+            this.goodsListBlock = document.querySelector('.catalog');
+
+            this.render();
+            this.addEventHandler();
+            this._cart.init();
+        }
+
+        fetchGoods(cb) {
+            makeGETRequest(`${API_URL}/catalogData.json`, (goods) => {
+                this.goods = JSON.parse(goods);
+                cb();
+            });
+        }
+
+        render() {
+
+            if (this.goods.length > 0) {
+                this.goods.forEach(good => {
+                    const goodItem = new GoodsItem(good);
+                    this.goodsListBlock.insertAdjacentHTML('beforeend', goodItem.render());
+                });
+            } else {
+                pass; // Товаров нет/ Каталог пуст
+            };
+        }
+
+        addEventHandler() {
+            this.goodsListBlock.addEventListener('click', event => {
+                this.addToBasket(event);
+                this._cart.render(this._cart.basketList);     // Прорисовка корзины
+            });
+        }
+
+        addToBasket(event) {
+            if (!event.target.classList.contains('addToBasket-btn')) return;
+            // event.target         -- Объект на котором произошло событие
+            // classList.contains   -- Есть ли у объекта элемент класса
+
+            const id_product = +event.target.dataset.id_product;
+            const newProduct = this.goods.find((good) => good.id_product === id_product);
+            this._cart.basketList.addToBasket(newProduct);
+            //
+        }
+    }
+
+    class BasketList {          // Список товаров[{}]
+        constructor() {
+            this.goods = [];
+        }
+
+        addToBasket(good) {
+            // Проверка на наличие товара в корзине
+            let indexProduct = this.goods.findIndex(item => item.product_name === good.product_name);
+
+            if (indexProduct !== -1) {
+                this.goods[indexProduct].quantity += 1; // Изменение количества
+            } else {
+                good.quantity = 1;                      // Создаем количество
+                this.goods.push(good);                 // Запись товара в лист
+            };
+        }
+
+        removeFromBasket(good) {
+            let indexProduct = this.goods.findIndex(item => item.product_name === good.product_name);
+
+            if ((this.goods[indexProduct].quantity -= 1) === 0) {
+                this.goods.splice(indexProduct, 1);
+            };
+        }
+
+        countBasketPrice() {
+            return this.goods.reduce((sum, good) => sum += good.price * good.quantity, 0);
+        }
+
+        countGoodsBasket() {
+            return this.goods.reduce((sum, good) => sum += good.quantity, 0);
+        }
+
+        clearBasketList() {
+            this.goods = [];
+        }
+    }
+
+    class Cart {
+        constructor() {
+            this.basketList = null;
+            this.cartListBlock = null;
+            this.cartButton = null;
+        }
+
+        init() {
+            this.cartListBlock = document.querySelector('.cart-list');
+            this.cartButton = document.querySelector('.cart-btn');
+            this.cartButton.addEventListener('click', () => this.clearCart());
+            this.basketList = new BasketList();
+
+            this.render(this.basketList);
+        }
+
+        displayBlock(good) {
+            return `<div class="good">
+            <div><b>Наименование</b>: ${good.product_name}</div>
+            <div><b>Цена за штуку</b>: ${good.price}</div>
+            <div><b>Количество</b>: ${good.quantity}</div>
+            <div><b>Стоимость</b>: ${good.price * good.quantity}</div>
+            <button class="del-good-btn" data-id_product="${good.id_product}">Удалить</button>
+        </div>`;
+        }
+
+        render(basketList) {
+            this.cartListBlock.innerHTML = '';   // очищаем карточку и заполняем заново:
+            if (basketList.goods.length) {
+                basketList.goods.forEach(item => {
+                    this.cartListBlock.insertAdjacentHTML('beforeend', this.displayBlock(item));
+                });
+                this.cartListBlock.insertAdjacentHTML(
+                    'beforeend', `<div class="rezume">
+                В корзине ${basketList.countGoodsBasket()} товар(ов)
+                стоимостью ${basketList.countBasketPrice()}
+            </div>`);
+                this.removeEventHandler();
+            } else {
+                this.cartListBlock.textContent = 'Корзина пуста';
+            };
+        }
+
+        removeEventHandler() {
+            const btnDelete = document.querySelectorAll('.del-good-btn');
+
+            btnDelete.forEach(btn => {
+                btn.addEventListener('click', (event) => this.removeFromBasket(event));
+            });
+        }
+
+        removeFromBasket(event) {
+            const id = +event.target.dataset.id_product;
+            const changeProduct = this.basketList.goods.find((good) => good.id_product === id);
+            this.basketList.removeFromBasket(changeProduct);
+            this.render(this.basketList);
+        }
+
+        clearCart() {        // Очистка корзины
+            this.basketList.clearBasketList();
+            this.render(this.basketList);
+        }
+    }
+
+    class Product_basis {
+        constructor(id_product, product_name, price, direction = '', lot = 1) {
+            this.id_product = id_product;
+            this.product_name = product_name;
+            this.price = price;
+
+            this.direction = direction
+
+            this.lot = lot;
+            this.status = lot;
+        }
+
+        changeLot(number, func) {
+            switch (func) {
+                case '+':
+                    this.lot += number;
+                case '-':
+                    if (number > this.lot) {
+                        consol.log('На складе недостаточно товара');
+                        this.eventProduct();
+                    } else {
+                        this.lot = this.lot - number;
+                        if (this.lot === 0) {
+                            this.status = false;
+                        };
+                    }
+            };
+        }
+
+        get status() {
+            return this._status;
+        }
+
+        set status(value) {
+            if (value <= 0) {
+                this._status = false;
+            } else {
+                this._status = true;
+            };
+        }
+
+        eventProduct() { }
+    };
+
+    function start() {
+        let pen = new Product_basis(12, 'Ялта', 110000, 'Юг', 50);
+        let tv = new Product_basis(13, 'Гагра', 45000, 'Юг', 50);
+        let tv1 = new Product_basis(17, 'Белокуриха', 47000, 'Юг', 50);
+        let book = new Product_basis(14, 'Домбай', 101000, 'Юг', 50);
+        let book1 = new Product_basis(15, 'Байкал', 65000, 'Дальный восток', 50);
+        let book2 = new Product_basis(16, 'Паланга', 72500, 'Прибалтика', 0);
+        let tv2 = new Product_basis(18, 'Юрмала', 145000, 'Прибалтика', 0);
+
+        let catalogList = {
+            goods: [pen, tv, tv1, book, book1, book2, tv2],
+
+            addToCatalog(product_name) {
+                this.goods.push(product_name);
+            },
+        };
+
+        const list = new GoodsList(catalogList.goods);
+        list.init();
+    }
+
+    start()
+</script>

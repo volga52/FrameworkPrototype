@@ -1,0 +1,55 @@
+<main class="content">
+    <div class="column">
+        <h2 class="my-4">Направления</h2>
+        <div class="list-group">
+            <a href="index-new.html?direction=pribalt" class="list-group-item">Прибалтика</a>
+            <a href="index-new.html?direction=south" class="list-group-item">Южные направления</a>
+            <a href="index-new.html?direction=far_east" class="list-group-item">Дальний восток</a>
+            <a href="index-new.html?direction=extreme" class="list-group-item">Центральная Россия</a>
+            <a href="index-new.html?direction=center_russia" class="list-group-item">Экстрим</a>
+        </div>
+    </div>
+
+    <div class="container">
+        <div class="catalog-block">
+            <h2 class="catalog-title">Каталог </h2>
+            <div class="catalog di-flex">
+                {% block catalog %}
+                    {% for item in context.catalog %}
+                        <div class="good item-catalog">
+                        <img src="#" alt="Photo" height="120" wight="120" class="image">
+                            <div>
+                                <div><b>Наименование</b>: {{item.name}}</div>
+                                <div><b>Стоимость</b>: {{item.price}}</div>
+                                <button class="addToBasket-btn" data-id_product="${this.good.id_product}">Добавить в корзину</button>
+                                <div>Направление: {{item.direction}}</div>
+                            </div>
+                        </div>
+                    {% endfor %}
+                {% endblock %}
+            </div>
+            <p>Информация на {{context.data}}</p>
+        </div>
+
+        <div class="cart-block">
+            <div class="cart-title">Корзина</div>
+            <div class="cart-list di-flex"></div>
+            <button class="cart-btn">очистить корзину</button>
+        </div>
+        <form action="" method="post">
+            <fieldset>
+                <!-- <legend>Зарегистрируйтесь</legend> -->
+                <p>Зарегистрируйтесь</p>
+                <p><label class="title" for="name">Ваше имя:</label>
+                    <input type="text" name="name" id="name"><br />
+                    <label class="title" for="email">Ваш email:</label>
+                    <input type="text" name="email" id="email">
+                </p>
+                <span class="title">Уже зарегистрированы?</span>
+                <label><input type="radio" name="member" value="yes" /> Да</label>
+                <label><input type="radio" name="member" value="no" /> Нет</label></p>
+            </fieldset>
+            <div class="submit"><input type="submit" value="Регистрация" /></div>
+        </form>
+    </div>
+</main>

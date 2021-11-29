@@ -1,0 +1,42 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+    <meta charset="UTF-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Document</title>
+    {% block style %}{% endblock %}
+</head>
+
+<body>
+    <div class="wrapper">
+        <header class="header-block">
+            <div class="header-title">
+                <h1>Лучшие санатории СССР</h1>
+            </div>
+            <div class="menu-top">
+                <a href="admin.html" class="cart-button">admin</a>
+                <a href="index.html" class="cart-button">Главная</a>
+                <a href="history.html" class="cart-button">История</a>
+                <a href="basket.html" class="cart-button">Корзина</a>
+            </div>
+            <h2 class="header-h2">{% block title2 %}{% endblock %}</h2>
+
+        </header>
+        {% block main %} {% endblock%}
+
+        <footer class="footer">
+            <hr>
+            <div class="notice">
+                <p>PythonDevelopment Groop</p>
+                <p>2021 All rights reserved &copy;</p>
+            </div>
+        </footer>
+    </div>
+
+    {% block javascript %} {% endblock %}
+
+</body>
+
+</html>
