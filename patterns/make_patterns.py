@@ -2,8 +2,6 @@ import copy
 import json
 import quopri
 
-from patterns.default_values import default_direction_list
-
 
 # абстрактный пользователь
 class User:
@@ -57,15 +55,14 @@ class Location:
         self.name = name
         # type => int   direction.id
         self.direction = direction
-        # Добвить в направление?
-        # self.direction.locations.append(self)
-        # self.id_elem = id_
+        self.name_direction = None
         # 1 - активно 0 - не активно
         self.status = status
         self.price = price
 
     def __repr__(self):
-        return f'{self.id_product} {self.name} {self.direction} {self.price} {self.status}'
+        return f'class Location {self.id_product} {self.name} {self.direction} ' \
+               f'{self.name_direction} {self.price} {self.status}'
 
 
 class Catalog:
@@ -77,7 +74,7 @@ class Catalog:
         # Список словарей (проверенный)
         self.list_for_html = []
 
-        self.default_directions()
+        self.get_directions()
 
         self.init_catalog()
 
@@ -87,7 +84,17 @@ class Catalog:
     def init_catalog(self):
         list_products = LocationFactory.load_all_from_file()
         if list_products:
-            self.goods_list = [Location(**_dict) for _dict in list_products]
+            # self.goods_list = [Location(**_dict) for _dict in list_products]
+            for _dict in list_products:
+                new_location = Location(**_dict)
+                self.goods_list.append(new_location)
+                # Определяем направление по id
+                direction_record = self.find_direction_by_id(new_location.direction)
+                # Записываем название направления в новый продукт
+                new_location.name_direction = direction_record.public_name
+                # Записываем id продукта в список-продуктов направления
+                direction_record.locations.append(new_location.id_product)
+
             self.form_list_dicts()
 
     def add_product(self, product):
@@ -119,13 +126,21 @@ class Catalog:
         self.list_for_html = [vars(_class) for _class in self.goods_list]
 
     @staticmethod
-    def create_direction(name, public_name=None):
-        return Direction(name, public_name)
+    def create_direction(public_name):
+        return Direction(public_name)
 
     # Загрузка основных напрвлений
-    def default_directions(self):
+    def get_directions(self):
+        default_direction_list = [
+            'Прибалтика',
+            'Южное направление',
+            'Дальний Восток',
+            'Центральная Россия',
+            'Север',
+            'Экстрим',
+        ]
         for i in default_direction_list:
-            new_direction = Direction(i[0], i[1])
+            new_direction = Direction(i)
             self.directions.append(new_direction)
 
     # Получение списка Направлений
@@ -135,16 +150,24 @@ class Catalog:
     # Поиск 'направления по id'
     def find_direction_by_id(self, id):
         for item in self.directions:
-            print('item', item.id)
             if item.id == id:
+                print('item', item.id)
                 return item
         raise Exception(f'Нет направления с id = {id}')
 
 
-
-class Basket(Catalog):
+class Basket:
     def __init__(self):
-        super().__init__()
+        # super().__init__()
+        self.goods_list = []
+        self.cost = None
+        self.directions = []
+        self.list_for_html = []
+
+        # self.get_directons()
+        #
+        # self.init_catalog()
+
 
 
 # порождающий паттерн Абстрактная фабрика - фабрика товаров
@@ -248,8 +271,7 @@ class ByDaysLocation(Location):
 class Direction:
     auto_id = 0
 
-    def __init__(self, name, public_name):
-        self.name = name
+    def __init__(self, public_name):
         self.public_name = public_name
         self.locations = []
         Direction.auto_id += 1
