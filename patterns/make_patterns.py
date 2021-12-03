@@ -73,8 +73,11 @@ class Catalog:
         # Список объектов
         self.goods_list = []
         self.cost = None
+        self.directions = []
         # Список словарей (проверенный)
         self.list_for_html = []
+
+        self.default_directions()
 
         self.init_catalog()
 
@@ -114,6 +117,29 @@ class Catalog:
 
     def form_list_dicts(self):
         self.list_for_html = [vars(_class) for _class in self.goods_list]
+
+    @staticmethod
+    def create_direction(name, public_name=None):
+        return Direction(name, public_name)
+
+    # Загрузка основных напрвлений
+    def default_directions(self):
+        for i in default_direction_list:
+            new_direction = Direction(i[0], i[1])
+            self.directions.append(new_direction)
+
+    # Получение списка Направлений
+    def get_list_direction(self):
+        return [elem.public_name for elem in self.directions]
+
+    # Поиск 'направления по id'
+    def find_direction_by_id(self, id):
+        for item in self.directions:
+            print('item', item.id)
+            if item.id == id:
+                return item
+        raise Exception(f'Нет направления с id = {id}')
+
 
 
 class Basket(Catalog):
@@ -250,38 +276,13 @@ class UserTourFactory:
 class Engine:
     def __init__(self):
         self.class_ap = []
-        # self.free_seats = 0
-        # self.locations = []
-        self.directions = []
 
-        self.default_direction()
+        # self.default_direction()
         self.catalog = Catalog()
 
     @staticmethod
     def create_user(type_):
         return UserFactory.create(type_)
-
-    @staticmethod
-    def create_direction(name, public_name=None):
-        return Direction(name, public_name)
-
-    # Загрузка основных напрвлений
-    def default_direction(self):
-        for i in default_direction_list:
-            new_direction = Direction(i[0], i[1])
-            self.directions.append(new_direction)
-
-    # Получение списка Напрвлений
-    def get_list_direction(self):
-        return [elem.public_name for elem in self.directions]
-
-    # Поиск 'направления по id'
-    def find_direction_by_id(self, id):
-        for item in self.directions:
-            print('item', item.id)
-            if item.id == id:
-                return item
-        raise Exception(f'Нет направления с id = {id}')
 
     @staticmethod
     def create_user_tour(type_, name, direction):

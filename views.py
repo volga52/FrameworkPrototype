@@ -27,7 +27,7 @@ class Index:
         request['catalog'] = site.catalog.list_for_html
 
         # Преобразуем объект класса в список словарей
-        directions_list = [vars(i) for i in site.directions]
+        directions_list = [vars(i) for i in site.catalog.directions]
 
         get_dict = request.get('data_get')
         if get_dict:
@@ -52,7 +52,7 @@ class History:
 
 class Admin:
     def __call__(self, request):
-        request['list_directions'] = site.get_list_direction()
+        request['list_directions'] = site.catalog.get_list_direction()
         return '200 OK', render('admin.html', context=request)
 
 
