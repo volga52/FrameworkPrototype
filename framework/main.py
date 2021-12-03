@@ -36,21 +36,6 @@ class Framework:
         # 'POST' - request['data'], 'GET' - request['request_params']
         request[class_request.request_name_agr] = data
 
-        # # Получаем все данные запроса
-        # method = environ['REQUEST_METHOD']
-        # request['method'] = method
-        #
-        # if method == 'POST':
-        #     data = PostRequests().get_request_params(environ)
-        #     request['data'] = data
-        #     print(f'Нам пришёл post-запрос: {Framework.decode_value(data)}')
-        # if method == 'GET':
-        #     request_params = GetRequests().get_request_params(environ)
-        #     request['request_params'] = request_params
-        #     # print(f'Нам пришли GET-параметры: {request_params}')
-        # # print(request)  # {'method': 'GET', 'request_params': {'id_elem': '1', 'category': '10'}}
-
-        # print(f'Нам пришёл {method} запрос: {Framework.decode_value(data)}')
         print(f'Нам пришёл {method} запрос: {data}')
 
         # находим нужный контроллер

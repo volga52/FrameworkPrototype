@@ -5,16 +5,18 @@
         <hr>
         <h3>Список направлений</h3>
         <ul>
-            {% for item in objects_list %}
-            <li>
-                {{item.name}} <span>Количество курсов: {{item.course_count()}}</span>
-            </li>
+            {% for name in context.list_directions %}
+                <li>{{name}}</li>
             {% endfor %}
         </ul>
-        <h4>Создание направления</h4>
         <form method="post">
-            <input type="text" name="name" placeholder="Название">
-            <button type="submit">Сохранить</button>
+            <h4>Создание направление</h4>
+            <input type="text" name="new_direction" placeholder="Название">
+            <button type="submit">Создать</button>
+            <h4>Удалить направление</h4>
+            <input type="text" name="delete_direction" placeholder="Название">
+            <button type="submit">Создать</button>
+
         </form>
     </div>
 

@@ -2,18 +2,37 @@
     <div class="column">
         <h2 class="my-4">Направления</h2>
         <div class="list-group">
-            <a href="#" class="list-group-item">Прибалтика</a>
-            <a href="#" class="list-group-item">Южные направления</a>
-            <a href="#" class="list-group-item">Дальний восток</a>
-            <a href="#" class="list-group-item">Центральная Россия</a>
-            <a href="#" class="list-group-item">Экстрим</a>
+            {% for dir in directions %}
+                <a href="index?id_direction={{dir.id}}" class="list-group-item">{{ dir.public_name}}</a>
+            {% endfor %}
         </div>
     </div>
+
     <div class="container">
         <div class="catalog-block">
-            <h2 class="catalog-title">Каталог на {{context.data}}</h2>
-            <div class="catalog di-flex"></div>
+            <h2 class="catalog-title">Каталог </h2>
+            <div class="catalog di-flex">
+
+                {% block catalog %}
+                    {% for item in context.catalog %}
+                        <div class="good item-catalog">
+                        <img src="#" alt="Photo" height="120" wight="120" class="image">
+                            <div>
+
+                                <div><b>Наименование</b>: {{item.name}}</div>
+                                <div><b>Стоимость</b>: {{item.price}}</div>
+                                <button class="addToBasket-btn" data-id_product="${this.good.id_product}">Добавить в корзину</button>
+                                <div>Направление: {{item.direction}}</div>
+
+                            </div>
+                        </div>
+                    {% endfor %}
+                {% endblock %}
+
+            </div>
+            <p>Информация на {{context.data}}</p>
         </div>
+
         <div class="cart-block">
             <div class="cart-title">Корзина</div>
             <div class="cart-list di-flex"></div>
