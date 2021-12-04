@@ -1,3 +1,4 @@
+import abc
 import copy
 import json
 import quopri
@@ -65,7 +66,7 @@ class Location:
                f'{self.name_direction} {self.price} {self.status}'
 
 
-class Catalog:
+class KitElem(metaclass=abc.ABCMeta):
     def __init__(self):
         # Список объектов
         self.goods_list = []
@@ -76,19 +77,26 @@ class Catalog:
 
         self.get_directions()
 
-        self.init_catalog()
+        self.init_interface()
 
     def __repr__(self):
         return f'Это весь лист {self.list_for_html}'
 
-    def init_catalog(self):
-        list_products = LocationFactory.load_all_from_file()
+    @abc.abstractmethod
+    def get_directions(self):
+        pass
+
+    def init_interface(self):
+        # Получение списка товаров
+        list_products = self.get_list_products()
         if list_products:
-            # self.goods_list = [Location(**_dict) for _dict in list_products]
+            # Обработка листа товаров для заполнения аргументов класса
             for _dict in list_products:
+                # Новый класс Товара
                 new_location = Location(**_dict)
+                # Добавление в список
                 self.goods_list.append(new_location)
-                # Определяем направление по id
+                # Определяем обновляемое Направление по id
                 direction_record = self.find_direction_by_id(new_location.direction)
                 # Записываем название направления в новый продукт
                 new_location.name_direction = direction_record.public_name
@@ -97,24 +105,31 @@ class Catalog:
 
             self.form_list_dicts()
 
+    # Получение списка товаров для обработки
+    @abc.abstractmethod
+    def get_list_products(self):
+        pass
+
+    # Добавить товар в список товаров
     def add_product(self, product):
         if self.check_presence(product):
             self.goods_list.append(product)
 
+    # Удалить товар из списка товаров
     def delete_product(self, product):
         for elem in self.goods_list:
             if elem.id_product == product.id_product:
                 index_del_elem = self.goods_list.index(elem)
                 self.goods_list.remove(index_del_elem)
 
+    # Поиск элементов с указанным Направлением
     def find_to_direction(self, direction):
         return [elem for elem in self.goods_list if elem.direction == direction]
-
-    # def allocation_locations(self):
 
     def clear_all(self):
         self.goods_list = []
 
+    # Проверка есть ли товар в списке
     def check_presence(self, product):
         for elem in self.goods_list:
             if elem.id_product == product.id_product:
@@ -122,13 +137,24 @@ class Catalog:
                 return True
         return False
 
+    # Получение списка словарей для html
     def form_list_dicts(self):
         self.list_for_html = [vars(_class) for _class in self.goods_list]
 
-    @staticmethod
-    def create_direction(public_name):
-        return Direction(public_name)
+    # Поиск 'направления по id'
+    def find_direction_by_id(self, id):
+        for item in self.directions:
+            if item.id == id:
+                print('item', item.id)
+                return item
+        raise Exception(f'Нет направления с id = {id}')
 
+    # Получение списка имен Направлений
+    def get_list_direction(self):
+        return [elem.public_name for elem in self.directions]
+
+
+class Catalog(KitElem):
     # Загрузка основных напрвлений
     def get_directions(self):
         default_direction_list = [
@@ -143,31 +169,26 @@ class Catalog:
             new_direction = Direction(i)
             self.directions.append(new_direction)
 
-    # Получение списка Направлений
-    def get_list_direction(self):
-        return [elem.public_name for elem in self.directions]
-
-    # Поиск 'направления по id'
-    def find_direction_by_id(self, id):
-        for item in self.directions:
-            if item.id == id:
-                print('item', item.id)
-                return item
-        raise Exception(f'Нет направления с id = {id}')
+    # Собственный метод Catalog
+    def get_list_products(self):
+        return LocationFactory.load_all_from_file()
 
 
-class Basket:
-    def __init__(self):
-        # super().__init__()
-        self.goods_list = []
-        self.cost = None
-        self.directions = []
-        self.list_for_html = []
+class Basket(KitElem):
+    def __init__(self, list_directions, list_):
+        super().__init__()
+        self.list_directions = list_directions
+        self._list = list_
 
-        # self.get_directons()
-        #
-        # self.init_catalog()
+    def get_directions(self):
+        list_directions = [elem.public_name for elem in self.list_directions]
+        for i in list_directions:
+            new_direction = Direction(i)
+            self.directions.append(new_direction)
 
+    def get_list_products(self):
+        # Должен вернуть список словарей
+        return
 
 
 # порождающий паттерн Абстрактная фабрика - фабрика товаров
