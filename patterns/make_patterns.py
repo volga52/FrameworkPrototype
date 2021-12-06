@@ -1,6 +1,8 @@
 import abc
 import copy
+from datetime import datetime
 import json
+import os
 import quopri
 
 
@@ -63,6 +65,103 @@ class Location:
     def __repr__(self):
         return f'class Location {self.id_product} {self.name} {self.direction} ' \
                f'{self.price} {self.status}'
+
+
+# порождающий паттерн Абстрактная фабрика - фабрика товаров
+class LocationFactory:
+    '''
+    Класс функционала для взаимодействия с сохраненными данными
+    '''
+    auto_id = 1
+
+    # подаем список элементов обекта для класса Location
+    # Если товар с таким именем есть выход
+    @staticmethod
+    def create(data_list):
+        '''
+        Функция обработки данных для создания нового
+        объекта-товара. Запись его в файл.
+        Возвращает новый объект
+        '''
+        # list_sample = ID, [NAME, DIRECTION, PRICE], STATUS
+        if LocationFactory.check_name(data_list[0]):
+            print('Элемент с таким именем уже есть')
+            return
+        # Ставим id
+        list_work = [LocationFactory.auto_id]
+        # Вставляем пришедшие данные
+        list_work.extend(data_list)
+        # Ставим status: 1
+        list_work.append(1)
+
+        new_class = Location(*list_work)
+        dict_new_class = vars(new_class)
+        LocationFactory.add_to_file(dict_new_class)
+
+        return new_class
+
+    @staticmethod
+    def add_to_file(product):
+        '''
+        Функция добавляет товар в файл
+        получает Python-объект словарь
+        '''
+        if product:
+            with open("data_file.json", 'r', encoding='utf-8') as r_f:
+                json_list = json.load(r_f)
+                json_list.append(product)
+
+            with open("data_file.json", 'w', encoding='utf-8') as w_f:
+                json.dump(json_list, w_f, ensure_ascii=False)
+
+    @staticmethod
+    def check_name(products_name):
+        '''
+        Функция проверяет имя на повтор
+        в файле. Получает имя объекта
+        Возвращает true или false
+        '''
+        all_products = LocationFactory.load_all_from_file()
+        if len(all_products) > 0:
+            list_id = []
+            for i in all_products:
+                list_id.append(int(i['id_product']))
+                if i['name'] == products_name:
+                    return True
+            LocationFactory.auto_id = max(list_id) + 1
+        return False
+
+    @staticmethod
+    def load_all_from_file():
+        '''
+        Функция считывает из JSON файла данные
+        Возвращает список словарей-товаров
+        '''
+        # goods_list = []
+        with open("data_file.json", 'r', encoding='utf-8') as r_f:
+            goods_list = json.load(r_f)
+        return goods_list
+
+    @staticmethod
+    def delete_to_file(product):
+        '''Функция удаляет элемент из "базы": файла'''
+        goods_list = LocationFactory.load_all_from_file()
+        for i in goods_list:
+            if i['id_product'] == product['id_product']:
+                goods_list.remove(product)
+                LocationFactory.save_file(goods_list)
+                return
+        print('Такого товара нет в файле')
+
+    @staticmethod
+    def clear_all():
+        pass
+
+    @staticmethod
+    def save_file(goods_list):
+        '''Функция записывает файл с данными'''
+        with open("data_file.json", 'w', encoding='utf-8') as w_f:
+            json.dump(goods_list, w_f, indent=4, ensure_ascii=False)
 
 
 class KitElem(metaclass=abc.ABCMeta):
@@ -194,8 +293,11 @@ class Catalog(KitElem):
     # Приходит [NAME, DIRECTION (int), PRICE]
     def add_product(self, data_list):
         new_product_dict = LocationFactory.create(data_list)
+        if not new_product_dict:
+            return 'Что-то пошло не так'
         self.processing_new_dict(new_product_dict)
         self.form_list_dicts()
+        return 'Товар добавлен'
 
 
 class Basket(KitElem):
@@ -217,100 +319,13 @@ class Basket(KitElem):
         self.processing_new_dict(data_list)
 
 
-# порождающий паттерн Абстрактная фабрика - фабрика товаров
-class LocationFactory:
-    auto_id = 1
-
-    # подаем список элементов обекта для класса Location
-    # Если товар с таким именем есть выход
-    @staticmethod
-    def create(data_list):
-        # list_sample = ID, [NAME, DIRECTION, PRICE], STATUS
-        if LocationFactory.check_name(data_list[0]):
-            print('Элемент с таким именем уже есть')
-            return
-        # Ставим id
-        list_work = [LocationFactory.auto_id]
-        # Вставляем пришедшие данные
-        list_work.extend(data_list)
-        # Ставим status: 1
-        list_work.append(1)
-
-        new_class = Location(*list_work)
-        dict_new_class = vars(new_class)
-        LocationFactory.add_to_file(dict_new_class)
-
-        return new_class
-
-    @staticmethod
-    def add_to_file(product):
-        '''
-        Функция добавляет товар в файл
-        получает Python-объект словарь
-        '''
-        if product:
-            with open("data_file.json", 'r', encoding='utf-8') as r_f:
-                json_list = json.load(r_f)
-                json_list.append(product)
-
-            with open("data_file.json", 'w', encoding='utf-8') as w_f:
-                json.dump(json_list, w_f, ensure_ascii=False)
-
-    @staticmethod
-    def check_name(products_name):
-        '''
-        Функция проверяет имя на повтор
-        в файле получает имя объекта
-        '''
-        all_products = LocationFactory.load_all_from_file()
-        if len(all_products) > 0:
-            list_id = []
-            for i in all_products:
-                list_id.append(int(i['id_product']))
-                if i['name'] == products_name:
-                    return True
-            LocationFactory.auto_id = max(list_id) + 1
-        return False
-
-    @staticmethod
-    def load_all_from_file():
-        '''
-        Функция считывает из JSON файла данные
-        Возвращает список словарей
-        '''
-        # goods_list = []
-        with open("data_file.json", 'r', encoding='utf-8') as r_f:
-            goods_list = json.load(r_f)
-        return goods_list
-
-    @staticmethod
-    def delete_to_file(product):
-        '''Функция удаляет элемент из "базы", файла'''
-        goods_list = LocationFactory.load_all_from_file()
-        for i in goods_list:
-            if i['id_product'] == product['id_product']:
-                goods_list.remove(product)
-                LocationFactory.save_file(goods_list)
-                return
-        print('Такого товара нет в файле')
-
-    @staticmethod
-    def clear_all():
-        pass
-
-    @staticmethod
-    def save_file(goods_list):
-        with open("data_file.json", 'w', encoding='utf-8') as w_f:
-            json.dump(goods_list, w_f, indent=4, ensure_ascii=False)
+# Тип 'по дням'
+class ByDaysLocation(Location):
+    pass
 
 
 # Тип 'путевка'
 class PackageLocation(Location):
-    pass
-
-
-# Тип 'по дням'
-class ByDaysLocation(Location):
     pass
 
 
@@ -394,10 +409,20 @@ class Logger(metaclass=SingletonByName):
 
     def __init__(self, name):
         self.name = name
+        self.text = None
 
-    @staticmethod
-    def log(text):
+    def log(self, text):
+        date_now = datetime.now()
+        self.text = f'{date_now} {text}'
+        self.save_to_file()
         print('log--->', text)
+
+    def save_to_file(self):
+        path = os.getcwd()
+        file_name = f"{path}\\logs\\{self.name}_log.log"
+
+        with open(file_name, 'a+', encoding='utf-8') as file:
+            file.write(self.text)
 
 
 if __name__ == '__main__':

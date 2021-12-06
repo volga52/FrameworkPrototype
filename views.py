@@ -6,10 +6,6 @@ site = Engine()
 logger = Logger('main')
 
 
-# class HtmlFunctions:
-#     @staticmethod
-
-
 class Index:
     def __call__(self, request):
         # Добаавляем request 'list_locations'
@@ -17,6 +13,7 @@ class Index:
             '''
             Функция делает выборку по направлению
             и заносит полученный список в request
+            для вывода на странице
             '''
             list_ = [elem for elem in site.catalog.list_for_html if elem['direction'] == int(id_)]
             request_['catalog'] = list_
@@ -30,14 +27,13 @@ class Index:
 
         # Преобразуем объект класса в список словарей
         directions_list = [vars(i) for i in site.catalog.directions]
-
+        # Словарь, содержащий данные (словари) из GET-запроса
         get_dict = request.get('data_get')
+        # Запуск обработчиков словарей GET-запросов
         if get_dict:
             for key in get_dict.keys():
                 functions_dict[key](get_dict.get(key), request)
-
-        print(request)
-
+        # print(request)
         return '200 OK', render('index.html', context=request,
                                 directions=directions_list)
 
@@ -61,6 +57,7 @@ class Admin:
     def __call__(self, request):
 
         def create_new_direction(name_direction):
+            '''Создание новой директории'''
             # Требуется валидация имени
             if len(name_direction) > 1:
                 site.catalog.directions.append(Direction(name_direction))
@@ -68,6 +65,7 @@ class Admin:
                 print('Имя не соответствует требованиям')
 
         def delete_direction(name_direction):
+            '''Функция удаляет деректорию-направление'''
             for elem in site.catalog.directions:
                 if elem.public_name == name_direction:
                     site.catalog.directions.remove(elem)
@@ -75,7 +73,13 @@ class Admin:
                     print('Такого элемента не существует')
 
         def new_location(data_list):
+            '''
+            Функция создаёт новый товар
+            Принимает список-кортеж элементов
+            NAME, DIRECTION, PRICE (если нет, то 0)
+            '''
             elem_index_1 = site.catalog.find_direction_by_param(data_list[1])
+            # Формирование DIRECTION. Требуется id из списка
             if elem_index_1:
                 print(f'Это id direction: {elem_index_1.id}')
                 elem_index_1 = elem_index_1.id
@@ -87,15 +91,19 @@ class Admin:
             data_list = (data_list[0], elem_index_1, elem_index_2)
 
             if input(f'Отправить data_list, для создания нового объекта?') == 'Yes':
-                site.catalog.add_product(data_list)
+                message = site.catalog.add_product(data_list)
+                request['message'] = message
 
+        # Словарь обработки
         functions_dict = {
             'new_direction': create_new_direction,
             'delete_direction': delete_direction,
             'new_location': new_location,
         }
 
+        # Словарь данные POST-запроса
         post_dict = request.get('data_post')
+        # Обработчик данных POST-запроса по словарю
         if post_dict:
             for key in post_dict.keys():
                 if key in functions_dict:
@@ -108,30 +116,3 @@ class Admin:
 class NotFound404:
     def __call__(self, request):
         return '404 WHAT', '404 PAGE Not Found'
-
-# контроллер - создать категорию
-# class CreateDirection:
-#     def __call__(self, request):
-#
-#         if request['method'] == 'POST':
-#             # метод пост
-#             print(request)
-#             data = request['data']
-#
-#             name = data['name']
-#             name = site.decode_value(name)
-#
-#             category_id = data.get('category_id')
-#
-#             category = None
-#             if category_id:
-#                 category = site.find_direction_by_param(int(category_id))
-#
-#             new_category = site.create_category(name, category)
-#
-#             site.categories.append(new_category)
-#
-#             return '200 OK', render('index.html', objects_list=site.categories)
-#         else:
-#             categories = site.categories
-#             return '200 OK', render('create_category.html', categories=categories)

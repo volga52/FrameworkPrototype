@@ -1,6 +1,10 @@
 from datetime import date
 
+from patterns.make_patterns import Logger
 from views import Index, Basket, History, Admin
+
+
+logger = Logger('front')
 
 
 # front controllers
@@ -9,6 +13,11 @@ def secret_front(request):
 
 
 def create_dict_new_location_front(request):
+    '''
+    Функция формирования данных для создания нового товара
+    Преобразует несколько данных в один словарь для
+    'Обработчика' страниц сайта
+    '''
     data_post = request.get('data_post', None)
     if data_post \
             and data_post.get('make_name', None) \
