@@ -1,10 +1,61 @@
 <main class="content">
-    <div class="container">
-        <h3 class="h1-main">Выбранные туры</h3>
-        <div class="catalog-block">
-            <!-- <div class="catalog-title">Выбранные туры</div>-->
-            <div class="catalog di-flex"></div>
+<!--    <div class="container">-->
+<!--        <h3 class="h1-main">Выбранные туры</h3>-->
+<!--        <div class="catalog-block">-->
+<!--            &lt;!&ndash; <div class="catalog-title">Выбранные туры</div>&ndash;&gt;-->
+<!--            <div class="catalog di-flex"></div>-->
+<!--        </div>-->
+<!--        <div class="cart-block">-->
+<!--            <div class="cart-title">Корзина</div>-->
+<!--            <div class="cart-list di-flex"></div>-->
+<!--            <button class="cart-btn">очистить корзину</button>-->
+<!--        </div>-->
+<!--        <form action="" method="post">-->
+<!--            <fieldset>-->
+<!--                <p>Сообщение</p>-->
+<!--                <p><label class="title" for="name">Ваше имя:</label>-->
+<!--                    <input type="text" name="name" id="name"><br/>-->
+<!--                    <label class="title">Message</label>-->
+<!--                    <textarea class="textarea" cols="37" rows="5" placeholder="Enter a message" name="message" id="message"></textarea>-->
+<!--                </p>-->
+<!--            </fieldset>-->
+<!--            <div class="submit"><input type="submit" value="Отправить"/></div>-->
+<!--        </form>-->
+<!--    </div>-->
+    <div class="column">
+        <h2 class="my-4">Направления</h2>
+        <div class="list-group">
+            {% for dir in directions %}
+                <a href="index?id_direction={{dir.id}}" class="list-group-item">{{ dir.public_name}}</a>
+            {% endfor %}
         </div>
+    </div>
+
+    <div class="container">
+        <div class="catalog-block">
+            <h2 class="catalog-title">Корзина </h2>
+            <div class="catalog di-flex">
+
+                {% block catalog %}
+                    {% for item in context.cart %}
+                        <div class="good item-catalog">
+                        <img src="#" alt="Photo" height="120" wight="120" class="image">
+                            <div>
+
+                                <div><b>Наименование</b>: {{item.name}}</div>
+                                <div><b>Стоимость</b>: {{item.price}}</div>
+                                <button class="addToBasket-btn" data-id_product="${this.good.id_product}">Добавить в корзину</button>
+                                <div>Направление: {{item.name_direction}}</div>
+
+                            </div>
+                        </div>
+                    {% endfor %}
+                {% endblock %}
+
+            </div>
+            <p>Дата {{context.data}}</p>
+        </div>
+
         <div class="cart-block">
             <div class="cart-title">Корзина</div>
             <div class="cart-list di-flex"></div>
@@ -12,14 +63,18 @@
         </div>
         <form action="" method="post">
             <fieldset>
-                <p>Сообщение</p>
+                <!-- <legend>Зарегистрируйтесь</legend> -->
+                <p>Зарегистрируйтесь</p>
                 <p><label class="title" for="name">Ваше имя:</label>
-                    <input type="text" name="name" id="name"><br/>
-                    <label class="title">Message</label>
-                    <textarea class="textarea" cols="37" rows="5" placeholder="Enter a message" name="message" id="message"></textarea>
+                    <input type="text" name="name" id="name"><br />
+                    <label class="title" for="email">Ваш email:</label>
+                    <input type="text" name="email" id="email">
                 </p>
+                <span class="title">Уже зарегистрированы?</span>
+                <label><input type="radio" name="member" value="yes" /> Да</label>
+                <label><input type="radio" name="member" value="no" /> Нет</label></p>
             </fieldset>
-            <div class="submit"><input type="submit" value="Отправить"/></div>
+            <div class="submit"><input type="submit" value="Регистрация" /></div>
         </form>
     </div>
 </main>

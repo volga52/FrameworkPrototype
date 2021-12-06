@@ -56,22 +56,21 @@ class Location:
         self.name = name
         # type => int   direction.id
         self.direction = direction
-        self.name_direction = None
         # 1 - активно 0 - не активно
         self.status = status
         self.price = price
 
     def __repr__(self):
         return f'class Location {self.id_product} {self.name} {self.direction} ' \
-               f'{self.name_direction} {self.price} {self.status}'
+               f'{self.price} {self.status}'
 
 
 class KitElem(metaclass=abc.ABCMeta):
-    def __init__(self):
+    def __init__(self, list_directions=None):
         # Список объектов
         self.goods_list = []
         self.cost = None
-        self.directions = []
+        self.directions = list_directions if list_directions else []
         # Список словарей (проверенный)
         self.list_for_html = []
 
@@ -86,6 +85,7 @@ class KitElem(metaclass=abc.ABCMeta):
     def get_directions(self):
         pass
 
+    # @abc.abstractmethod
     def init_interface(self):
         # Получение списка товаров
         list_products = self.get_list_products()
@@ -94,26 +94,31 @@ class KitElem(metaclass=abc.ABCMeta):
             for _dict in list_products:
                 # Новый класс Товара
                 new_location = Location(**_dict)
-                # Добавление в список
-                self.goods_list.append(new_location)
-                # Определяем обновляемое Направление по id
-                direction_record = self.find_direction_by_id(new_location.direction)
-                # Записываем название направления в новый продукт
-                new_location.name_direction = direction_record.public_name
-                # Записываем id продукта в список-продуктов направления
-                direction_record.locations.append(new_location.id_product)
-
+                self.processing_new_dict(new_location)
             self.form_list_dicts()
 
-    # Получение списка товаров для обработки
+    # Получение списка товаров (словарей) для обработки
     @abc.abstractmethod
     def get_list_products(self):
         pass
 
+    # Функция получает новый товар - class Location
+    # дополняет его Направлением, заносит товар в Направление
+    def processing_new_dict(self, new_location):
+        # Добавление в список
+        self.goods_list.append(new_location)
+        # Определяем обновляемое Направление по id
+        direction_record = self.find_direction_by_param(new_location.direction)
+        # Записываем название направления в новый продукт
+        new_location.name_direction = direction_record.public_name
+        # Записываем id продукта в список-продуктов направления
+        direction_record.locations.append(new_location.id_product)
+
     # Добавить товар в список товаров
-    def add_product(self, product):
-        if self.check_presence(product):
-            self.goods_list.append(product)
+    @abc.abstractmethod
+    def add_product(self, elem):
+        self.processing_new_dict(elem)
+        self.form_list_dicts()
 
     # Удалить товар из списка товаров
     def delete_product(self, product):
@@ -142,12 +147,25 @@ class KitElem(metaclass=abc.ABCMeta):
         self.list_for_html = [vars(_class) for _class in self.goods_list]
 
     # Поиск 'направления по id'
-    def find_direction_by_id(self, id):
-        for item in self.directions:
-            if item.id == id:
-                print('item', item.id)
-                return item
-        raise Exception(f'Нет направления с id = {id}')
+    def find_direction_by_param(self, param):
+        if type(param) == int:
+            for item in self.directions:
+                if item.id == param:
+                    # print('item', item.id)
+                    return item
+        elif type(param) == str:
+            for item in self.directions:
+                if item.public_name == param:
+                    # print('item', item.name_public)
+                    return item
+        # raise Exception(f'Нет направления с id = {id}')
+        return False
+
+    # def find_id_direction(self, name_directions):
+    #     for item in self.directions:
+    #         if item.name_public == name_directions:
+    #             return item
+    #     return False
 
     # Получение списка имен Направлений
     def get_list_direction(self):
@@ -169,26 +187,34 @@ class Catalog(KitElem):
             new_direction = Direction(i)
             self.directions.append(new_direction)
 
-    # Собственный метод Catalog
+    # Получение списка (словарей) товаров для обработки
     def get_list_products(self):
         return LocationFactory.load_all_from_file()
 
+    # Приходит [NAME, DIRECTION (int), PRICE]
+    def add_product(self, data_list):
+        new_product_dict = LocationFactory.create(data_list)
+        self.processing_new_dict(new_product_dict)
+        self.form_list_dicts()
+
 
 class Basket(KitElem):
-    def __init__(self, list_directions, list_):
+    def __init__(self, list_directions_catalog):
         super().__init__()
-        self.list_directions = list_directions
-        self._list = list_
+        self.directions = list_directions_catalog
 
     def get_directions(self):
-        list_directions = [elem.public_name for elem in self.list_directions]
+        # Получаем список имен
+        list_directions = [elem.public_name for elem in self.directions]
         for i in list_directions:
             new_direction = Direction(i)
             self.directions.append(new_direction)
 
     def get_list_products(self):
-        # Должен вернуть список словарей
-        return
+        return None
+
+    def add_product(self, data_list):
+        self.processing_new_dict(data_list)
 
 
 # порождающий паттерн Абстрактная фабрика - фабрика товаров
@@ -207,7 +233,7 @@ class LocationFactory:
         list_work = [LocationFactory.auto_id]
         # Вставляем пришедшие данные
         list_work.extend(data_list)
-        # Ставим
+        # Ставим status: 1
         list_work.append(1)
 
         new_class = Location(*list_work)
@@ -318,10 +344,10 @@ class UserTourFactory:
 # Основной интерфейс
 class Engine:
     def __init__(self):
-        self.class_ap = []
-
         # self.default_direction()
         self.catalog = Catalog()
+        self.cart = Basket(self.catalog.directions)
+
 
     @staticmethod
     def create_user(type_):
@@ -382,4 +408,5 @@ if __name__ == '__main__':
     LocationFactory.create(['два', 2, 150])
     LocationFactory.create(['три', 2, 150])
     # LocationFactory.delete_to_file({"id_product": 1, "name": "first", "direction": 1, "status": 1, "price": 100})
+    # LocationFactory.create(['sixth', 3, 100])
     print(catalog)
