@@ -1,18 +1,12 @@
 from framework.templator import render
 
 from patterns.make_patterns import Logger, Engine, Direction
-from patterns.structural_patterns import AppRoute, Debug
 
 site = Engine()
 logger = Logger('main')
 
-# Элемент для варианта с Декораторами
-routes = {}
 
-
-@AppRoute(routes=routes, url='/index/')
 class Index:
-    @Debug(name='Index', logger=logger)
     def __call__(self, request):
         # Добаавляем request 'list_locations'
         def selection(id_, request_):
@@ -44,9 +38,7 @@ class Index:
                                 directions=directions_list)
 
 
-@AppRoute(routes=routes, url='/basket/')
 class Basket:
-    @Debug(name='Basket', logger=logger)
     def __call__(self, request):
         request['cart'] = site.cart.list_for_html
 
@@ -56,16 +48,12 @@ class Basket:
         return '200 OK', render('basket.html', context=request, directions=directions_list)
 
 
-@AppRoute(routes=routes, url='/history/')
 class History:
-    @Debug(name='History', logger=logger)
     def __call__(self, request):
         return '200 OK', render('history.html', context=request)
 
 
-@AppRoute(routes=routes, url='/admin/')
 class Admin:
-    @Debug(name='Admin', logger=logger)
     def __call__(self, request):
 
         def create_new_direction(name_direction):

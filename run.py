@@ -1,6 +1,10 @@
-from framework.main import Framework
-from urls import routes, fronts
 from wsgiref.simple_server import make_server
+
+from framework.main import Framework
+# from urls import routes, fronts       # До применения Декораторов
+from urls import fronts
+from views import routes
+
 from patterns.make_patterns import Logger
 
 logger = Logger('run')
