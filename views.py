@@ -10,7 +10,7 @@ logger = Logger('main')
 routes = {}
 
 
-@AppRoute(routes=routes, url='/index/')
+# @AppRoute(routes=routes, url='/index/')
 class Index:
     @Debug(name='Index', logger=logger)
     def __call__(self, request):

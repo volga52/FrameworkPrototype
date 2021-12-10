@@ -5,6 +5,8 @@ import json
 import os
 import quopri
 
+from patterns.behavioral_patterns import Subject
+
 
 # абстрактный пользователь
 class User:
@@ -61,7 +63,7 @@ class Location:
         # 1 - активно 0 - не активно
         self.status = status
         self.price = price
-
+        # super().__init__()
 
     def __repr__(self):
         return f'class Location {self.id_product} {self.name} {self.direction} ' \
@@ -326,7 +328,7 @@ class PackageLocation(Location):
 
 
 # Направление - категория
-class Direction:
+class Direction(Subject):
     auto_id = 0
 
     def __init__(self, public_name):
@@ -334,6 +336,7 @@ class Direction:
         self.locations = []
         Direction.auto_id += 1
         self.id = Direction.auto_id
+        super().__init__()
 
     def location_count(self):
         return sum([len(i) for i in self.locations])

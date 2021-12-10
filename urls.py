@@ -34,10 +34,10 @@ def other_front(request):
 
 fronts = [secret_front, other_front, create_dict_new_location_front]
 
-# routes = {
-#     '/': Index(),
-#     '/index/': Index(),
-#     '/basket/': Basket(),
-#     '/history/': History(),
-#     '/admin/': Admin(),
-# }
+routes_urls = {
+    '/': Index(),
+    '/index/': Index(),
+    # '/basket/': Basket(),
+    # '/history/': History(),
+    # '/admin/': Admin(),
+}
