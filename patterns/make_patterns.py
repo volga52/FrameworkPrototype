@@ -168,24 +168,26 @@ class LocationFactory:
 
 
 class KitElem(metaclass=abc.ABCMeta):
-    def __init__(self, list_directions=None):
+    # def __init__(self, list_directions=None):
+    def __init__(self, _directions):
         # Список объектов
         self.goods_list = []
         self.cost = None
-        self.directions = list_directions if list_directions else []
+        # self.directions = list_directions if list_directions else []
+        self.directions = _directions
         # Список словарей (проверенный)
         self.list_for_html = []
 
-        self.get_directions()
+        # self.get_directions()
 
         self.init_interface()
 
     def __repr__(self):
         return f'Это весь лист {self.list_for_html}'
 
-    @abc.abstractmethod
-    def get_directions(self):
-        pass
+    # @abc.abstractmethod
+    # def get_directions(self):
+    #     pass
 
     # @abc.abstractmethod
     def init_interface(self):
@@ -210,7 +212,7 @@ class KitElem(metaclass=abc.ABCMeta):
         # Добавление в список
         self.goods_list.append(new_location)
         # Определяем обновляемое Направление по id
-        direction_update = self.find_direction_by_param(new_location.direction)
+        direction_update = Engine.find_direction_by_param(self.directions, new_location.direction)
         # Записываем название направления в новый продукт
         new_location.name_direction = direction_update.public_name
         # Записываем id продукта в список-продуктов направления
@@ -226,8 +228,10 @@ class KitElem(metaclass=abc.ABCMeta):
     def delete_product(self, product):
         for elem in self.goods_list:
             if elem.id_product == product.id_product:
-                index_del_elem = self.goods_list.index(elem)
-                self.goods_list.remove(index_del_elem)
+                # index_del_elem = self.goods_list.index(elem)
+                # self.goods_list.remove(index_del_elem)
+                self.goods_list.remove(elem)
+                return 
 
     # Поиск элементов с указанным Направлением
     def find_to_direction(self, direction):
@@ -248,40 +252,21 @@ class KitElem(metaclass=abc.ABCMeta):
     def form_list_dicts(self):
         self.list_for_html = [vars(_class) for _class in self.goods_list]
 
-    # Поиск 'направления по' id, public_name
-    def find_direction_by_param(self, param):
-        if type(param) == int:
-            for item in self.directions:
-                if item.id == param:
-                    # print('item', item.id)
-                    return item
-        elif type(param) == str:
-            for item in self.directions:
-                if item.public_name == param:
-                    # print('item', item.name_public)
-                    return item
-        # raise Exception(f'Нет направления с id = {id}')
-        return False
-
-    # Получение списка имен Направлений
-    def get_list_direction(self):
-        return [elem.public_name for elem in self.directions]
-
 
 class Catalog(KitElem):
     # Загрузка основных напрвлений
-    def get_directions(self):
-        default_direction_list = [
-            'Прибалтика',
-            'Южное направление',
-            'Дальний Восток',
-            'Центральная Россия',
-            'Север',
-            'Экстрим',
-        ]
-        for i in default_direction_list:
-            new_direction = Direction(i)
-            self.directions.append(new_direction)
+    # def get_directions(self):
+    #     default_direction_list = [
+    #         'Прибалтика',
+    #         'Южное направление',
+    #         'Дальний Восток',
+    #         'Центральная Россия',
+    #         'Север',
+    #         'Экстрим',
+    #     ]
+    #     for i in default_direction_list:
+    #         new_direction = Direction(i)
+    #         self.directions.append(new_direction)
 
     # Получение списка (словарей) товаров для обработки
     def get_list_products(self):
@@ -298,16 +283,16 @@ class Catalog(KitElem):
 
 
 class Basket(KitElem):
-    def __init__(self):
-        super().__init__()
-        self.directions = None
+    # def __init__(self):
+    #     super().__init__()
+    #     self.directions = None
 
-    def get_directions(self):
-        # Получаем список имен
-        list_directions = [elem.public_name for elem in self.directions]
-        for i in list_directions:
-            new_direction = Direction(i)
-            self.directions.append(new_direction)
+    # def get_directions(self):
+    #     # Получаем список имен
+    #     list_directions = [elem.public_name for elem in self.directions]
+    #     for i in list_directions:
+    #         new_direction = Direction(i)
+    #         self.directions.append(new_direction)
 
     # Получение списка (словарей) товаров для обработки
     def get_list_products(self):
@@ -358,9 +343,11 @@ class UserTourFactory:
 # Основной интерфейс
 class Engine:
     def __init__(self):
-        self.catalog = Catalog()
-        self.cart = Basket()
-        self.cart.directions = self.catalog.directions
+        self.directions = None
+        self.get_directions_default()
+
+        self.catalog = Catalog(self.directions)
+        self.cart = Basket(self.directions)
 
     @staticmethod
     def create_user(type_):
@@ -381,6 +368,40 @@ class Engine:
         val_b = bytes(val.replace('%', '=').replace("+", " "), 'UTF-8')
         val_decode_str = quopri.decodestring(val_b)
         return val_decode_str.decode('UTF-8')
+
+    # Получение списка имен Направлений
+    def get_list_direction(self):
+        return [elem.public_name for elem in self.directions]
+
+    # Загрузка основных напрвлений
+    def get_directions_default(self):
+        default_direction_list = [
+            'Прибалтика',
+            'Южное направление',
+            'Дальний Восток',
+            'Центральная Россия',
+            'Север',
+            'Экстрим',
+        ]
+
+        self.directions = [Direction(i) for i in default_direction_list]
+
+    # Поиск 'направления по' id, public_name
+    @staticmethod
+    def find_direction_by_param(list_directions, param):
+        if type(param) == int:
+            for item in list_directions:
+                if item.id == param:
+                    # print('item', item.id)
+                    return item
+        elif type(param) == str:
+            for item in list_directions:
+                if item.public_name == param:
+                    # print('item', item.name_public)
+                    return item
+        # raise Exception(f'Нет направления с id = {id}')
+        return False
+
 
 
 # порождающий паттерн Синглтон

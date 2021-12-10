@@ -32,7 +32,8 @@ class Index:
         request['catalog'] = site.catalog.list_for_html
 
         # Преобразуем объект класса в список словарей
-        directions_list = [vars(i) for i in site.catalog.directions]
+        # directions_list = [vars(i) for i in site.catalog.directions]
+        directions_list = [vars(i) for i in site.directions]
         # Словарь, содержащий данные (словари) из GET-запроса
         get_dict = request.get('data_get')
         # Запуск обработчиков словарей GET-запросов
@@ -51,7 +52,7 @@ class Basket:
         request['cart'] = site.cart.list_for_html
 
         # Преобразуем объект класса в список словарей
-        directions_list = [vars(i) for i in site.catalog.directions]
+        directions_list = [vars(i) for i in site.directions]
 
         return '200 OK', render('basket.html', context=request, directions=directions_list)
 
@@ -72,17 +73,18 @@ class Admin:
             '''Создание новой директории'''
             # Требуется валидация имени
             if len(name_direction) > 1:
-                site.catalog.directions.append(Direction(name_direction))
+                site.directions.append(Direction(name_direction))
             else:
                 print('Имя не соответствует требованиям')
 
         def delete_direction(name_direction):
             '''Функция удаляет деректорию-направление'''
-            for elem in site.catalog.directions:
+            for elem in site.directions:
                 if elem.public_name == name_direction:
-                    site.catalog.directions.remove(elem)
-                else:
-                    print('Такого элемента не существует')
+                    site.directions.remove(elem)
+                    return
+            print('Такого элемента не существует')
+            return
 
         def new_location(data_list):
             '''
@@ -90,7 +92,7 @@ class Admin:
             Принимает список-кортеж элементов
             NAME, DIRECTION, PRICE (если нет, то 0)
             '''
-            elem_index_1 = site.catalog.find_direction_by_param(data_list[1])
+            elem_index_1 = site.find_direction_by_param(site.directions, data_list[1])
             # Формирование DIRECTION. Требуется id из списка
             if elem_index_1:
                 print(f'Это id direction: {elem_index_1.id}')
@@ -121,7 +123,7 @@ class Admin:
                 if key in functions_dict:
                     functions_dict[key](post_dict.get(key))
 
-        request['list_directions'] = site.catalog.get_list_direction()
+        request['list_directions'] = site.get_list_direction()
         return '200 OK', render('admin.html', context=request)
 
 
