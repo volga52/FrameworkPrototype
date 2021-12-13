@@ -1,6 +1,7 @@
-import os
-
+# import os
 import jsonpickle
+
+from framework.templator import render
 
 
 class Subject:
@@ -57,24 +58,4 @@ class BaseSerializer:
     @staticmethod
     def load(data):
         return jsonpickle.loads(data)
-
-
-# # поведенческий паттерн - Стратегия
-# class ConsoleWriter:
-#     def __init__(self, name):
-#         self.name = name
-#
-#     def write(self, text):
-#         print(f'{self.name} log--> {text}')
-#
-#
-# class FileWriter:
-#
-#     def __init__(self, name):
-#         path = os.getcwd()
-#         self.name = f"{path}\\logs\\{name}_log.log"
-#
-#     def write(self, text):
-#         with open(self.file_name, 'a+', encoding='utf-8') as file:
-#             file.write(f'{text}\n')
 

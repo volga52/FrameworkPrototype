@@ -5,7 +5,10 @@ import json
 import os
 import quopri
 
-from patterns.behavioral_patterns import Subject
+from patterns.behavioral_patterns import Subject, EmailNotifier, SmsNotifier
+
+email_notifier = EmailNotifier()
+sms_notifier = SmsNotifier()
 
 
 # абстрактный пользователь
@@ -417,6 +420,54 @@ class Logger(metaclass=SingletonByName):
 
         with open(file_name, 'a+', encoding='utf-8') as file:
             file.write(self.text)
+
+
+class WorkplaceAdmin(Subject):
+    def __init__(self, site, request):
+        self.site = site
+        self.request = request
+        super().__init__()
+
+    def create_new_direction(self, name_direction):
+        '''Создание новой директории'''
+        # Требуется валидация имени
+        if len(name_direction) > 1:
+            self.site.directions.append(Direction(name_direction))
+        else:
+            print('Имя не соответствует требованиям')
+
+    def delete_direction(self, name_direction):
+        '''Функция удаляет деректорию-направление'''
+        for elem in self.site.directions:
+            if elem.public_name == name_direction:
+                self.site.directions.remove(elem)
+                return
+        print('Такого элемента не существует')
+        return
+
+    def new_location(self, data_list):
+        '''
+        Функция создаёт новый товар
+        Принимает список-кортеж элементов
+        NAME, DIRECTION, PRICE (если нет, то 0)
+        '''
+        elem_index_1 = self.site.find_direction_by_param(self.site.directions, data_list[1])
+        # Формирование DIRECTION. Требуется id из списка
+        if elem_index_1:
+            print(f'Это id direction: {elem_index_1.id}')
+            elem_index_1 = elem_index_1.id
+        else:
+            print(f'Нет направления с id = {elem_index_1}')
+            return
+
+        elem_index_2 = int(data_list[2]) if type(data_list[2]) == int else 0
+        data_list = (data_list[0], elem_index_1, elem_index_2)
+
+        if input("Создать новый объект из данных POST? Да - Y ") == 'Y':
+            result = self.site.catalog.add_product(data_list)
+            self.request['message'] = result[1]
+            self.observers.append(email_notifier)
+            self.observers.append(sms_notifier)
 
 
 if __name__ == '__main__':
