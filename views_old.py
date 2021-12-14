@@ -109,7 +109,7 @@ class Admin:
                 if key in functions_dict:
                     functions_dict[key](post_dict.get(key))
 
-        request['list_directions'] = site.catalog.get_list_direction()
+        request['list_directions'] = site.catalog.get_list_directions_names()
         return '200 OK', render('admin.html', context=request)
 
 

@@ -79,7 +79,6 @@ class Location:
         # 1 - активно 0 - не активно
         self.status = status
         self.price = price
-        # super().__init__()
 
     def __repr__(self):
         return f'class Location {self.id_product} {self.name} {self.direction} ' \
@@ -113,17 +112,17 @@ class LocationFactory:
         # Ставим status: 1
         list_work.append(1)
 
-        new_class = Location(*list_work)
+        new_obj = Location(*list_work)
         # dict_new_class = vars(new_class)
-        LocationFactory.add_to_file(new_class)
+        LocationFactory.add_to_file(new_obj)
 
-        return new_class
+        return new_obj
 
     @staticmethod
     def add_to_file(product):
         '''
         Функция добавляет товар в файл
-        получает Python-объект словарь
+        получает Python-список объектов
         '''
         if product:
             with open("data_file_00.json", 'r', encoding='utf-8') as r_f:
@@ -131,19 +130,11 @@ class LocationFactory:
                 json_list_ = jsonpickle.loads(load_data)
                 json_list_.append(product)
 
-            with open("data_file_00.json", 'w', encoding='utf-8') as w_f:
-                save_data = jsonpickle.dumps(json_list_)
-                w_f.write(save_data)
+            LocationFactory.save_file(json_list_)
 
-        product = vars(product)
-        if product:
-            with open("data_file.json", 'r', encoding='utf-8') as r_f:
-                json_list = json.load(r_f)
-                json_list.append(product)
-
-            with open("data_file.json", 'w', encoding='utf-8') as w_f:
-                json.dump(json_list, w_f, ensure_ascii=False)
-
+            # with open("data_file_00.json", 'w', encoding='utf-8') as w_f:
+            #     save_data = jsonpickle.dumps(json_list_)
+            #     w_f.write(save_data)
 
     @staticmethod
     def check_name(products_name):
@@ -151,50 +142,45 @@ class LocationFactory:
         Функция проверяет имя на повтор
         в файле. Получает имя объекта
         Возвращает true или false
+        Меняет auto_id в Location
         '''
         all_products = LocationFactory.load_all_from_file()
-        if len(all_products) > 0:
-            list_id = []
-            for i in all_products:
-                list_id.append(int(i['id_product']))
-                if i['name'] == products_name:
-                    return True
-            LocationFactory.auto_id = max(list_id) + 1
-        # return False
-
         # if len(all_products) > 0:
-        #     # Учетчик id элементов
         #     list_id = []
         #     for i in all_products:
-        #         list_id.append(int(i.id_product))
-        #         if i.name == products_name:
+        #         list_id.append(int(i['id_product']))
+        #         if i['name'] == products_name:
         #             return True
         #     LocationFactory.auto_id = max(list_id) + 1
+        # return False
+
+        if len(all_products) > 0:
+            # Учетчик id элементов
+            list_id = []
+            for i in all_products:
+                list_id.append(int(i.id_product))
+                if i.name == products_name:
+                    return True
+            LocationFactory.auto_id = max(list_id) + 1
+        return False
 
     @staticmethod
     def load_all_from_file():
         '''
         Функция считывает из JSON файла данные
-        Возвращает список словарей-товаров
+        Возвращает список объектов товаров
         '''
-        # goods_list = []
-        # with open("data_file.json", 'r', encoding='utf-8') as r_f:
-        #     goods_list = json.load(r_f)
-        #
-        # return goods_list
-
         with open("data_file_00.json", 'r', encoding='utf-8') as r_f:
             goods_list = r_f.read()
             goods_list = jsonpickle.loads(goods_list)
-        # print(goods_list)
-        return [vars(i) for i in goods_list]
+        return goods_list
 
     @staticmethod
     def delete_to_file(product):
         '''Функция удаляет элемент из "базы": файла'''
         goods_list = LocationFactory.load_all_from_file()
         for i in goods_list:
-            if i['id_product'] == product['id_product']:
+            if i.id_product == product.id_product:
                 goods_list.remove(product)
                 LocationFactory.save_file(goods_list)
                 return
@@ -207,8 +193,9 @@ class LocationFactory:
     @staticmethod
     def save_file(goods_list):
         '''Функция записывает файл с данными'''
-        with open("data_file.json", 'w', encoding='utf-8') as w_f:
-            json.dump(goods_list, w_f, indent=4, ensure_ascii=False)
+        with open("data_file_00.json", 'w', encoding='utf-8') as w_f:
+            save_data = jsonpickle.dumps(goods_list)
+            w_f.write(save_data)
 
 
 class KitElem(metaclass=abc.ABCMeta):
@@ -217,27 +204,21 @@ class KitElem(metaclass=abc.ABCMeta):
         self.goods_list = []
         self.cost = None
         self.directions = _directions
-        # Список словарей (проверенный)
-        self.list_for_html = []
-
-        # self.get_directions()
 
         self.init_interface()
 
     def __repr__(self):
-        return f'Это весь лист {self.list_for_html}'
+        return f'Это список объектов {jsonpickle.dumps(self.goods_list)}'
 
-    # @abc.abstractmethod
     def init_interface(self):
         # Получение списка товаров
         list_products = self.get_list_products()
         if len(list_products) > 0:
             # Обработка листа товаров для заполнения аргументов класса
-            for _dict in list_products:
+            for obj in list_products:
                 # Новый класс Товара
-                new_location = Location(**_dict)
+                new_location = Location(**vars(obj))
                 self.processing_new_dict(new_location)
-            self.form_list_dicts()
 
     # Получение списка товаров (словарей) для обработки
     @abc.abstractmethod
@@ -260,15 +241,12 @@ class KitElem(metaclass=abc.ABCMeta):
     # Добавить товар в список товаров
     @abc.abstractmethod
     def add_product(self, elem):
-        self.processing_new_dict(elem)
-        self.form_list_dicts()
+        pass
 
     # Удалить товар из списка товаров
     def delete_product(self, product):
         for elem in self.goods_list:
             if elem.id_product == product.id_product:
-                # index_del_elem = self.goods_list.index(elem)
-                # self.goods_list.remove(index_del_elem)
                 self.goods_list.remove(elem)
                 return
 
@@ -287,10 +265,6 @@ class KitElem(metaclass=abc.ABCMeta):
                 return True
         return False
 
-    # Получение списка словарей для html
-    def form_list_dicts(self):
-        self.list_for_html = [vars(_class) for _class in self.goods_list]
-
 
 class Catalog(KitElem):
 
@@ -300,11 +274,11 @@ class Catalog(KitElem):
 
     # Приходит [NAME, DIRECTION (int), PRICE]
     def add_product(self, data_list):
-        new_product_dict = LocationFactory.create(data_list)
-        if not new_product_dict:
+        new_product = LocationFactory.create(data_list)
+        if not new_product:
             return False, 'Что-то пошло не так'
-        new_location = self.processing_new_dict(new_product_dict)
-        self.form_list_dicts()
+
+        new_location = self.processing_new_dict(new_product)
         return True, 'Товар добавлен'
 
 
@@ -318,7 +292,7 @@ class Basket(KitElem):
         return self.goods_list
 
     def add_product(self, data_list):
-        self.processing_new_dict(data_list)
+        self.goods_list.append(data_list)
 
 
 # Тип 'по дням'
@@ -343,8 +317,6 @@ class Direction:
 
     def location_count(self):
         return sum([len(i) for i in self.locations])
-
-    # def (self, directions):
 
 
 # порождающий паттерн Абстрактная фабрика - фабрика курсов
@@ -393,7 +365,7 @@ class Engine:
         return val_decode_str.decode('UTF-8')
 
     # Получение списка имен Направлений
-    def get_list_direction(self):
+    def get_list_directions_names(self):
         return [elem.public_name for elem in self.directions]
 
     # Загрузка основных направлений
@@ -518,8 +490,9 @@ class WorkplaceAdmin(Subject):
         if input("Создать новый объект из данных POST? Да - Y ") == 'Y':
             result = self.site.catalog.add_product(data_list)
             self.request['message'] = result[1]
-            self.observers.append(email_notifier)
-            self.observers.append(sms_notifier)
+            if result[0]:
+                self.observers.append(email_notifier)
+                self.observers.append(sms_notifier)
 
 
 if __name__ == '__main__':

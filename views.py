@@ -8,8 +8,6 @@ from patterns.behavioral_patterns import ListView
 
 site = Engine()
 logger = Logger('main')
-# email_notifier = EmailNotifier()
-# sms_notifier = SmsNotifier()
 
 # Элемент для варианта с Декораторами
 routes = {}
@@ -26,8 +24,7 @@ class Index:
             и заносит полученный список в request
             для вывода на странице
             '''
-            # list_ = [elem for elem in site.catalog.list_for_html if elem['direction'] == int(id_)]
-            list_ = [elem for elem in site.catalog.list_for_html if elem['direction'] == int(id_)]
+            list_ = site.find_direction_by_param(site.directions, int(id_)).locations
             request_['catalog'] = list_
 
         # Список функций обработчиков
@@ -35,7 +32,7 @@ class Index:
             'id_direction': selection,
         }
 
-        request['catalog'] = site.catalog.list_for_html
+        request['catalog'] = site.catalog.goods_list
 
         directions_list = site.directions
         # Словарь, содержащий данные (словари) из GET-запроса
@@ -44,7 +41,6 @@ class Index:
         if get_dict:
             for key in get_dict.keys():
                 functions_dict[key](get_dict.get(key), request)
-        # print(request)
         return '200 OK', render('index.html', context=request,
                                 directions=directions_list)
 
@@ -60,10 +56,8 @@ class Index:
 class Basket:
     @Debug(name='Basket', logger=logger)
     def __call__(self, request):
-        request['cart'] = site.cart.list_for_html
+        request['cart'] = site.cart.goods_list
 
-        # Преобразуем объект класса в список словарей
-        # directions_list = [vars(i) for i in site.directions]
         directions_list = site.directions
 
         return '200 OK', render('basket.html', context=request, directions=directions_list)
@@ -81,7 +75,7 @@ class Admin:
     @Debug(name='Admin', logger=logger)
     def __call__(self, request):
 
-        # Класс функций обработки
+        # Класс функций обработки событий
         workplace = WorkplaceAdmin(site, request)
 
         # Словарь обработки
@@ -91,7 +85,7 @@ class Admin:
             'new_location': workplace.new_location,
         }
 
-        # Словарь данные POST-запроса
+        # Словарь - данные POST-запроса
         post_dict = request.get('data_post')
         # Обработчик данных POST-запроса по словарю
         if post_dict:
@@ -100,7 +94,7 @@ class Admin:
                     functions_dict[key](post_dict.get(key))
             workplace.notify()
 
-        request['list_directions'] = site.get_list_direction()
+        request['list_directions'] = site.get_list_directions_names()
         return '200 OK', render('admin.html', context=request)
 
 
