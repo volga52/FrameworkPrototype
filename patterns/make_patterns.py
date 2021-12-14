@@ -5,6 +5,8 @@ import json
 import os
 import quopri
 
+import jsonpickle
+
 from patterns.behavioral_patterns import Subject, EmailNotifier, SmsNotifier
 
 email_notifier = EmailNotifier()
@@ -112,8 +114,8 @@ class LocationFactory:
         list_work.append(1)
 
         new_class = Location(*list_work)
-        dict_new_class = vars(new_class)
-        LocationFactory.add_to_file(dict_new_class)
+        # dict_new_class = vars(new_class)
+        LocationFactory.add_to_file(new_class)
 
         return new_class
 
@@ -124,12 +126,24 @@ class LocationFactory:
         получает Python-объект словарь
         '''
         if product:
+            with open("data_file_00.json", 'r', encoding='utf-8') as r_f:
+                load_data = r_f.read()
+                json_list_ = jsonpickle.loads(load_data)
+                json_list_.append(product)
+
+            with open("data_file_00.json", 'w', encoding='utf-8') as w_f:
+                save_data = jsonpickle.dumps(json_list_)
+                w_f.write(save_data)
+
+        product = vars(product)
+        if product:
             with open("data_file.json", 'r', encoding='utf-8') as r_f:
                 json_list = json.load(r_f)
                 json_list.append(product)
 
             with open("data_file.json", 'w', encoding='utf-8') as w_f:
                 json.dump(json_list, w_f, ensure_ascii=False)
+
 
     @staticmethod
     def check_name(products_name):
@@ -146,7 +160,16 @@ class LocationFactory:
                 if i['name'] == products_name:
                     return True
             LocationFactory.auto_id = max(list_id) + 1
-        return False
+        # return False
+
+        # if len(all_products) > 0:
+        #     # Учетчик id элементов
+        #     list_id = []
+        #     for i in all_products:
+        #         list_id.append(int(i.id_product))
+        #         if i.name == products_name:
+        #             return True
+        #     LocationFactory.auto_id = max(list_id) + 1
 
     @staticmethod
     def load_all_from_file():
@@ -155,9 +178,16 @@ class LocationFactory:
         Возвращает список словарей-товаров
         '''
         # goods_list = []
-        with open("data_file.json", 'r', encoding='utf-8') as r_f:
-            goods_list = json.load(r_f)
-        return goods_list
+        # with open("data_file.json", 'r', encoding='utf-8') as r_f:
+        #     goods_list = json.load(r_f)
+        #
+        # return goods_list
+
+        with open("data_file_00.json", 'r', encoding='utf-8') as r_f:
+            goods_list = r_f.read()
+            goods_list = jsonpickle.loads(goods_list)
+        # print(goods_list)
+        return [vars(i) for i in goods_list]
 
     @staticmethod
     def delete_to_file(product):
