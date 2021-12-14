@@ -1,0 +1,32 @@
+{% extends "base.html" %}
+
+{% block title2 %}
+    Список клиентов
+{% endblock %}
+
+{% block style %}
+	{% include "inc-style.html" %}
+{% endblock %}
+
+{% block main %}
+
+<div class="content-admin">
+    <div>
+    <li>
+        <a href="/create-student/">Создать пользователя</a>
+    </li>
+	</div>
+    <h3>Список пользователей</h3>
+    <div>
+
+        {% for item in objects_list %}
+        <li>
+            {{item.name}}
+            {% for location in item.locations %}
+                {{location.name}}
+            {% endfor %}
+        </li>
+        {% endfor %}
+    </div>
+</div>
+{% endblock %}

@@ -4,6 +4,7 @@ from patterns.behavioral_patterns import Subject
 from patterns.make_patterns import Logger, Engine, Direction, WorkplaceAdmin
 from patterns.behavioral_patterns import EmailNotifier, SmsNotifier, BaseSerializer
 from patterns.structural_patterns import AppRoute, Debug
+from patterns.behavioral_patterns import ListView
 
 site = Engine()
 logger = Logger('main')
@@ -25,6 +26,7 @@ class Index:
             и заносит полученный список в request
             для вывода на странице
             '''
+            # list_ = [elem for elem in site.catalog.list_for_html if elem['direction'] == int(id_)]
             list_ = [elem for elem in site.catalog.list_for_html if elem['direction'] == int(id_)]
             request_['catalog'] = list_
 
@@ -35,9 +37,7 @@ class Index:
 
         request['catalog'] = site.catalog.list_for_html
 
-        # Преобразуем объект класса в список словарей
-        # directions_list = [vars(i) for i in site.catalog.directions]
-        directions_list = [vars(i) for i in site.directions]
+        directions_list = site.directions
         # Словарь, содержащий данные (словари) из GET-запроса
         get_dict = request.get('data_get')
         # Запуск обработчиков словарей GET-запросов
@@ -49,6 +49,13 @@ class Index:
                                 directions=directions_list)
 
 
+# @AppRoute(routes=routes, url='/basket-CBV/')
+# class BasketCBV(ListView):
+#     template_name = 'basket.html'
+#     queryset = site.cart.list_for_html
+#     context_object_name = 'cart'
+
+
 @AppRoute(routes=routes, url='/basket/')
 class Basket:
     @Debug(name='Basket', logger=logger)
@@ -56,7 +63,8 @@ class Basket:
         request['cart'] = site.cart.list_for_html
 
         # Преобразуем объект класса в список словарей
-        directions_list = [vars(i) for i in site.directions]
+        # directions_list = [vars(i) for i in site.directions]
+        directions_list = site.directions
 
         return '200 OK', render('basket.html', context=request, directions=directions_list)
 
@@ -108,49 +116,9 @@ class NotFound404:
         return '404 WHAT', '404 PAGE Not Found'
 
 
-# class WorkplaceAdmin(Subject):
-#     def __init__(self, site, request):
-#         self.site = site
-#         self.request = request
-#         super().__init__()
-#
-#     def create_new_direction(self, name_direction):
-#         '''Создание новой директории'''
-#         # Требуется валидация имени
-#         if len(name_direction) > 1:
-#             self.site.directions.append(Direction(name_direction))
-#         else:
-#             print('Имя не соответствует требованиям')
-#
-#     def delete_direction(self, name_direction):
-#         '''Функция удаляет деректорию-направление'''
-#         for elem in self.site.directions:
-#             if elem.public_name == name_direction:
-#                 self.site.directions.remove(elem)
-#                 return
-#         print('Такого элемента не существует')
-#         return
-#
-#     def new_location(self, data_list):
-#         '''
-#         Функция создаёт новый товар
-#         Принимает список-кортеж элементов
-#         NAME, DIRECTION, PRICE (если нет, то 0)
-#         '''
-#         elem_index_1 = self.site.find_direction_by_param(self.site.directions, data_list[1])
-#         # Формирование DIRECTION. Требуется id из списка
-#         if elem_index_1:
-#             print(f'Это id direction: {elem_index_1.id}')
-#             elem_index_1 = elem_index_1.id
-#         else:
-#             print(f'Нет направления с id = {elem_index_1}')
-#             return
-#
-#         elem_index_2 = int(data_list[2]) if type(data_list[2]) == int else 0
-#         data_list = (data_list[0], elem_index_1, elem_index_2)
-#
-#         if input("Создать новый объект из данных POST? Да - Y ") == 'Y':
-#             result = self.site.catalog.add_product(data_list)
-#             self.request['message'] = result[1]
-#             self.observers.append(email_notifier)
-#             self.observers.append(sms_notifier)
+# Страница 'Список клиентов'
+@AppRoute(routes=routes, url='/client-list/')
+class ClientListView(ListView):
+    queryset = site.users
+    template_name = 'client-list.html'
+

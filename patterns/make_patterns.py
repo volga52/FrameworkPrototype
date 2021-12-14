@@ -13,30 +13,41 @@ sms_notifier = SmsNotifier()
 
 # абстрактный пользователь
 class User:
-    pass
+    def __init__(self, name):
+        self.id = 0
+        self.name = name
+        self.status = 'on'
+        self.account = 'anonymous'
 
 
-# администратор
+# Администратор
 class Admin(User):
     pass
 
 
 # зарегистрированный пользователь
-class LegalUser(User):
-    pass
+class ClientUser(User):
+    def __init__(self, name):
+        self.locations = []
+        self.account = name
+        self.password = ''
+        super().__init__(name)
 
 
 # порождающий паттерн Абстрактная фабрика - фабрика пользователей
 class UserFactory:
+    auto_id = 0
     types = {
         'admin': Admin,
-        'legal_user': LegalUser,
+        'client': ClientUser,
     }
 
     # порождающий паттерн Фабричный метод
     @classmethod
-    def create(cls, type_):
-        return cls.types[type_]()
+    def create(cls, type_='client', name='anonymous'):
+        new_elem = cls.types[type_](name)
+        UserFactory.auto_id += 1
+        return new_elem
 
 
 # порождающий паттерн Прототип - Местоположение
@@ -171,12 +182,10 @@ class LocationFactory:
 
 
 class KitElem(metaclass=abc.ABCMeta):
-    # def __init__(self, list_directions=None):
     def __init__(self, _directions):
         # Список объектов
         self.goods_list = []
         self.cost = None
-        # self.directions = list_directions if list_directions else []
         self.directions = _directions
         # Список словарей (проверенный)
         self.list_for_html = []
@@ -270,6 +279,9 @@ class Catalog(KitElem):
 
 
 class Basket(KitElem):
+    def __init__(self, _directions, user):
+        super().__init__(_directions)
+        self.user = user
 
     # Получение списка (словарей) товаров для обработки
     def get_list_products(self):
@@ -323,18 +335,20 @@ class Engine:
     def __init__(self):
         self.directions = None
         self.get_directions_default()
+        self.users = []
 
         self.catalog = Catalog(self.directions)
-        self.cart = Basket(self.directions)
-        # super().__init__()
+        self.cart = None
 
-    @staticmethod
-    def create_user(type_):
-        return UserFactory.create(type_)
+        self.init_basket()
 
-    @staticmethod
-    def create_user_tour(type_, name, direction):
-        return UserTourFactory.create(type_, name, direction)
+    # @staticmethod
+    # def create_user(type_):
+    #     return UserFactory.create(type_)
+
+    # @staticmethod
+    # def create_user_tour(type_, name, direction):
+    #     return UserTourFactory.create(type_, name, direction)
 
     def get_location(self, name):
         for item in self.catalog.goods_list:
@@ -352,7 +366,7 @@ class Engine:
     def get_list_direction(self):
         return [elem.public_name for elem in self.directions]
 
-    # Загрузка основных напрвлений
+    # Загрузка основных направлений
     def get_directions_default(self):
         default_direction_list = [
             'Прибалтика',
@@ -365,7 +379,7 @@ class Engine:
 
         self.directions = [Direction(i) for i in default_direction_list]
 
-    # Поиск 'направления по' id, public_name
+    # Поиск 'направления по' id или public_name
     @staticmethod
     def find_direction_by_param(list_directions, param):
         if type(param) == int:
@@ -380,6 +394,14 @@ class Engine:
                     return item
         # raise Exception(f'Нет направления с id = {id}')
         return False
+
+    def init_user(self):
+        new_user = UserFactory.create()
+        self.users.append(new_user)
+        return new_user
+
+    def init_basket(self):
+        self.cart = Basket(self.directions, self.init_user())
 
 
 # порождающий паттерн Синглтон
