@@ -85,7 +85,7 @@ class ListView(TemplateView):
     context_object_name = 'objects_list'
 
     def get_queryset(self):
-        print(self.queryset)
+        # print(self.queryset)
         return self.queryset
 
     def get_context_object_name(self):
@@ -96,3 +96,24 @@ class ListView(TemplateView):
         context_object_name = self.get_context_object_name()
         context = {context_object_name: queryset}
         return context
+
+
+class CreateView(TemplateView):
+    template_name = 'create.html'
+
+    @staticmethod
+    def get_request_data(request):
+        return request['data_post']
+
+    def create_obj(self, data):
+        pass
+
+    def __call__(self, request):
+        if request.get('data_post', None) and request['data_post']['new_user_name']:
+            # метод пост
+            data = self.get_request_data(request)
+            self.create_obj(data)
+
+            return self.render_template_with_context()
+        else:
+            return super().__call__(request)

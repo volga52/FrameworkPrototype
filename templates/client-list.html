@@ -10,23 +10,32 @@
 
 {% block main %}
 
-<div class="content-admin">
-    <div>
-    <li>
-        <a href="/create-student/">Создать пользователя</a>
-    </li>
-	</div>
-    <h3>Список пользователей</h3>
-    <div>
-
-        {% for item in objects_list %}
-        <li>
-            {{item.name}}
-            {% for location in item.locations %}
-                {{location.name}}
+    <div class="content-admin">
+        <a href="/create-user/">Создать клиента</a>
+        <h3>Список пользователей</h3>
+        <div>
+            {% for item in objects_list %}
+            <li>
+                {{item.name}}
+                {% for location in item.locations %}
+                    {{location.name}}
+                {% endfor %}
+            </li>
             {% endfor %}
-        </li>
-        {% endfor %}
+        </div>
+
+<!--        <h3>Создание пользователя</h3>-->
+<!--        <form method="post">-->
+<!--            <span>Имя пользователя</span>-->
+<!--            <input type="text" name="new_user_name" placeholder="Имя">-->
+<!--            <div>-->
+<!--                <span>Права администратора</span>-->
+<!--                <label><input type="radio" name="new_user_specs" value="client" /> Нет</label>-->
+<!--                <label><input type="radio" name="new_user_specs" value="admin" /> Да</label></p>-->
+<!--                <button type="submit">Сохранить</button>-->
+<!--            </div>-->
+<!--        </form>-->
+
+
     </div>
-</div>
 {% endblock %}

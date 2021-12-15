@@ -1,10 +1,10 @@
 from framework.templator import render
 from patterns.behavioral_patterns import Subject
 
-from patterns.make_patterns import Logger, Engine, Direction, WorkplaceAdmin
+from patterns.make_patterns import Logger, Engine, Direction, WorkplaceAdmin, UserFactory
 from patterns.behavioral_patterns import EmailNotifier, SmsNotifier, BaseSerializer
 from patterns.structural_patterns import AppRoute, Debug
-from patterns.behavioral_patterns import ListView
+from patterns.behavioral_patterns import ListView, CreateView
 
 site = Engine()
 logger = Logger('main')
@@ -116,3 +116,21 @@ class ClientListView(ListView):
     queryset = site.users
     template_name = 'client-list.html'
 
+
+@AppRoute(routes=routes, url='/location-list/')
+class LocationListView(ListView):
+    queryset = site.catalog.goods_list
+    template_name = 'location-list.html'
+
+
+@AppRoute(routes=routes, url='/create-user/')
+class UserCreateView(CreateView):
+    template_name = 'create-user.html'
+
+    def create_obj(self, data: dict):
+        name = data['new_user_name']
+        specs = data['new_user_specs']
+        name = site.decode_value(name)
+
+        new_object = UserFactory.create(specs, name)
+        site.users.append(new_object)
