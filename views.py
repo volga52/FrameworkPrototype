@@ -3,11 +3,15 @@ from patterns.behavioral_patterns import Subject
 
 from patterns.make_patterns import Logger, Engine, Direction, WorkplaceAdmin, UserFactory
 from patterns.behavioral_patterns import EmailNotifier, SmsNotifier, BaseSerializer
+from patterns.mappers import MapperRegistry
 from patterns.structural_patterns import AppRoute, Debug
 from patterns.behavioral_patterns import ListView, CreateView
+from patterns.unit_of_work import UnitOfWork
 
 site = Engine()
 logger = Logger('main')
+UnitOfWork.new_current()
+UnitOfWork.get_current().set_mapper_registry(MapperRegistry)
 
 # Элемент для варианта с Декораторами
 routes = {}
@@ -113,8 +117,12 @@ class NotFound404:
 # Страница 'Список клиентов'
 @AppRoute(routes=routes, url='/client-list/')
 class ClientListView(ListView):
-    queryset = site.users
+    # queryset = site.users
     template_name = 'client-list.html'
+
+    def get_queryset(self):
+        mapper = MapperRegistry.get_current_mapper('client')
+        return mapper.all()
 
 
 @AppRoute(routes=routes, url='/location-list/')
@@ -134,3 +142,6 @@ class UserCreateView(CreateView):
 
         new_object = UserFactory.create(specs, name)
         site.users.append(new_object)
+
+        new_object.mark_new()
+        UnitOfWork.get_current().commit()

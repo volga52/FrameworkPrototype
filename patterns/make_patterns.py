@@ -1,9 +1,12 @@
 import abc
 import copy
 from datetime import datetime
-import json
+# import json
 import os
 import quopri
+from patterns.unit_of_work import DomainObject
+# import sqlite3
+# import threading
 
 import jsonpickle
 
@@ -18,8 +21,8 @@ class User:
     def __init__(self, name):
         self.id = 0
         self.name = name
-        self.status = 'on'
         self.account = 'anonymous'
+        self.status = 'on'
 
 
 # Администратор
@@ -28,27 +31,27 @@ class Admin(User):
 
 
 # зарегистрированный пользователь
-class ClientUser(User):
+class Client(User, DomainObject):
     def __init__(self, name):
-        self.locations = []
-        self.account = name
-        self.password = ''
+        # self.account = ''
+        # self.password = ''
         super().__init__(name)
+        self.locations = []
 
 
 # порождающий паттерн Абстрактная фабрика - фабрика пользователей
 class UserFactory:
-    auto_id = 0
+    # auto_id = 0
     types = {
         'admin': Admin,
-        'client': ClientUser,
+        'client': Client,
     }
 
     # порождающий паттерн Фабричный метод
     @classmethod
     def create(cls, type_='client', name='anonymous'):
         new_elem = cls.types[type_](name)
-        UserFactory.auto_id += 1
+        # UserFactory.auto_id += 1
         return new_elem
 
 
@@ -77,8 +80,8 @@ class Location:
         # type => int   direction.id
         self.direction = direction
         # 1 - активно 0 - не активно
-        self.status = status
         self.price = price
+        self.status = status
 
     def __repr__(self):
         return f'class Location {self.id_product} {self.name} {self.direction} ' \
