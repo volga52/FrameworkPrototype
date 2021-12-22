@@ -17,6 +17,14 @@ sms_notifier = SmsNotifier()
 site = Engine()
 logger = Logger('main')
 
+# def super_db():
+#     for elem in site.catalog.goods_list:
+#         elem.mark_new()
+#     UnitOfWork.get_current().commit()
+#
+# super_db()
+# input()
+
 # Элемент для варианта с Декораторами
 routes = {}
 

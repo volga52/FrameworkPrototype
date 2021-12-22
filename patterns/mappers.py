@@ -156,7 +156,7 @@ class LocationMapper:
     def __init__(self, connection):
         self.connection = connection
         self.cursor = connection.cursor()
-        self.tablename = 'users'
+        self.tablename = 'location'
 
     def all(self):
         statement = f'SELECT * from {self.tablename}'
@@ -186,6 +186,10 @@ class LocationMapper:
             raise RecordNotFoundException(f'record with id={id} not found')
 
     def insert(self, obj):
+        # debug
+        # print([vars(obj).items()])
+        # input()
+        # end
         statement = f"INSERT INTO {self.tablename} (name, direction, price, status) VALUES (?, ?, ?, ?)"
         self.cursor.execute(statement, (obj.name, obj.direction, obj.price, obj.status))
         try:
@@ -256,3 +260,21 @@ class MapperRegistry:
     @staticmethod
     def get_current_mapper(name):
         return MapperRegistry.mappers[name](connection)
+
+
+class DataBaseWorker:
+    # Загрузка всех данных таблиц БД
+    @staticmethod
+    def get_all_from_table(name_table):
+        mapper = MapperRegistry.get_current_mapper(name_table)
+        return mapper.all()
+
+    # @staticmethod
+    # def get_directions_default():
+    #     mapper = DirectionMapper(connection)
+    #     return mapper.all()
+    #
+    # @staticmethod
+    # def get_locations_form_db():
+    #     mapper = LocationMapper(connection)
+    #     return mapper.all()
