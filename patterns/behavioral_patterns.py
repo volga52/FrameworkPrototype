@@ -1,4 +1,3 @@
-# import os
 import jsonpickle
 
 from framework.templator import render
@@ -10,9 +9,7 @@ class Subject:
         self.observers = []
 
     def notify(self):
-        # _self = self
         for item in self.observers:
-            # print(vars(self))
             item.update(self)
 
 
@@ -24,27 +21,23 @@ class Observer:
 
 class SmsNotifier(Observer):
 
-    # @staticmethod
-    # def update(subject):
     def update(self, subject):
         loc = subject.site.catalog.goods_list[-1]
         directions = subject.site.directions
         print(
             'SMS->', f'в директорию '
-            f'{subject.site.find_direction_by_param(directions, loc.direction).public_name}'
+            f'{subject.site.directions[0].find_direction_by_param(directions, loc.direction).public_name}'
             f' добавлен объект ', {loc.name})
 
 
 class EmailNotifier(Observer):
 
-    # @staticmethod
-    # def update(subject):
     def update(self, subject):
         loc = subject.site.catalog.goods_list[-1]
         directions = subject.site.directions
         print(
             'EMAIL->', f'в директорию '
-            f'{subject.site.find_direction_by_param(directions, loc.direction).public_name}'
+            f'{subject.site.directions[0].find_direction_by_param(directions, loc.direction).public_name}'
             f' добавлен объект ', {loc.name})
 
 

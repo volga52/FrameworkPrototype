@@ -1,23 +1,26 @@
 from framework.templator import render
 from patterns.behavioral_patterns import Subject
 
-from patterns.make_patterns import Logger, Engine, Direction, WorkplaceAdmin, UserFactory
+from patterns.make_patterns import Logger, Direction, UserFactory
 from patterns.behavioral_patterns import EmailNotifier, SmsNotifier, BaseSerializer
 from patterns.mappers import MapperRegistry
 from patterns.structural_patterns import AppRoute, Debug
 from patterns.behavioral_patterns import ListView, CreateView
 from patterns.unit_of_work import UnitOfWork
+from patterns.engine import Engine
+
+UnitOfWork.new_current()
+UnitOfWork.get_current().set_mapper_registry(MapperRegistry)
+email_notifier = EmailNotifier()
+sms_notifier = SmsNotifier()
 
 site = Engine()
 logger = Logger('main')
-UnitOfWork.new_current()
-UnitOfWork.get_current().set_mapper_registry(MapperRegistry)
 
 # Элемент для варианта с Декораторами
 routes = {}
 
 
-# @AppRoute(routes=routes, url='/index/')
 class Index:
     @Debug(name='Index', logger=logger)
     def __call__(self, request):
@@ -28,7 +31,8 @@ class Index:
             и заносит полученный список в request
             для вывода на странице
             '''
-            list_ = site.find_direction_by_param(site.directions, int(id_)).locations
+            # list_ = site.find_direction_by_param(site.directions, int(id_)).locations
+            list_ = Direction.find_direction_by_param(site.directions, int(id_)).locations
             request_['catalog'] = list_
 
         # Список функций обработчиков
@@ -47,13 +51,6 @@ class Index:
                 functions_dict[key](get_dict.get(key), request)
         return '200 OK', render('index.html', context=request,
                                 directions=directions_list)
-
-
-# @AppRoute(routes=routes, url='/basket-CBV/')
-# class BasketCBV(ListView):
-#     template_name = 'basket.html'
-#     queryset = site.cart.list_for_html
-#     context_object_name = 'cart'
 
 
 @AppRoute(routes=routes, url='/basket/')
@@ -145,3 +142,60 @@ class UserCreateView(CreateView):
 
         new_object.mark_new()
         UnitOfWork.get_current().commit()
+
+
+class WorkplaceAdmin(Subject):
+    def __init__(self, site, request):
+        self.site = site
+        self.request = request
+        super().__init__()
+
+    def create_new_direction(self, name_direction):
+        '''Создание новой директории'''
+        # Требуется валидация имени
+        if len(name_direction) > 1:
+            new_object = Direction(name_direction)
+            self.site.directions.append(new_object)
+
+            new_object.mark_new()
+            UnitOfWork.get_current().commit()
+        else:
+            print('Имя не соответствует требованиям')
+
+    def delete_direction(self, name_direction):
+        '''Функция удаляет деректорию-направление'''
+        for elem in self.site.directions:
+            if elem.public_name == name_direction:
+                self.site.directions.remove(elem)
+
+                elem.mark_removed()
+                UnitOfWork.get_current().commit()
+                return
+        print('Такого элемента не существует')
+        return
+
+    def new_location(self, data_list):
+        '''
+        Функция создаёт новый товар
+        Принимает список-кортеж элементов
+        NAME, DIRECTION, PRICE (если нет, то 0)
+        '''
+        # elem_index_1 = self.site.find_direction_by_param(self.site.directions, data_list[1])
+        elem_index_1 = Direction.find_direction_by_param(self.site.directions, data_list[1])
+        # Формирование DIRECTION. Требуется id из списка
+        if elem_index_1:
+            print(f'Это id direction: {elem_index_1.id}')
+            elem_index_1 = elem_index_1.id
+        else:
+            print(f'Нет направления с id = {elem_index_1}')
+            return
+
+        elem_index_2 = int(data_list[2]) if type(data_list[2]) == int else 0
+        data_list = (data_list[0], elem_index_1, elem_index_2)
+
+        if input("Создать новый объект из данных POST? Да - Y ") == 'Y':
+            result = self.site.catalog.add_product(data_list)
+            self.request['message'] = result[1]
+            if result[0]:
+                self.observers.append(email_notifier)
+                self.observers.append(sms_notifier)

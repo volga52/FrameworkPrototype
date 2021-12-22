@@ -3,17 +3,9 @@ import copy
 from datetime import datetime
 # import json
 import os
-import quopri
-from patterns.unit_of_work import DomainObject
-# import sqlite3
-# import threading
-
 import jsonpickle
 
-from patterns.behavioral_patterns import Subject, EmailNotifier, SmsNotifier
-
-email_notifier = EmailNotifier()
-sms_notifier = SmsNotifier()
+from patterns.unit_of_work import DomainObject
 
 
 # абстрактный пользователь
@@ -148,14 +140,6 @@ class LocationFactory:
         Меняет auto_id в Location
         '''
         all_products = LocationFactory.load_all_from_file()
-        # if len(all_products) > 0:
-        #     list_id = []
-        #     for i in all_products:
-        #         list_id.append(int(i['id_product']))
-        #         if i['name'] == products_name:
-        #             return True
-        #     LocationFactory.auto_id = max(list_id) + 1
-        # return False
 
         if len(all_products) > 0:
             # Учетчик id элементов
@@ -177,6 +161,7 @@ class LocationFactory:
             goods_list = r_f.read()
             goods_list = jsonpickle.loads(goods_list)
         return goods_list
+
 
     @staticmethod
     def delete_to_file(product):
@@ -234,7 +219,7 @@ class KitElem(metaclass=abc.ABCMeta):
         # Добавление в список
         self.goods_list.append(new_location)
         # Определяем обновляемое Направление по id
-        direction_update = Engine.find_direction_by_param(self.directions, new_location.direction)
+        direction_update = Direction.find_direction_by_param(self.directions, new_location.direction)
         # Записываем название направления в новый продукт
         new_location.name_direction = direction_update.public_name
         # Записываем id продукта в список-продуктов направления
@@ -309,7 +294,7 @@ class PackageLocation(Location):
 
 
 # Направление - категория
-class Direction:
+class Direction(DomainObject):
     auto_id = 0
 
     def __init__(self, public_name):
@@ -320,69 +305,6 @@ class Direction:
 
     def location_count(self):
         return sum([len(i) for i in self.locations])
-
-
-# порождающий паттерн Абстрактная фабрика - фабрика курсов
-class UserTourFactory:
-    types = {
-        'package': PackageLocation,
-        'bydays': ByDaysLocation,
-    }
-
-    # порождающий паттерн Фабричный метод
-    @classmethod
-    def create(cls, type_, name, direction):
-        return cls.types[type_](name, direction)
-
-
-# Основной интерфейс
-class Engine:
-    def __init__(self):
-        self.directions = None
-        self.get_directions_default()
-        self.users = []
-
-        self.catalog = Catalog(self.directions)
-        self.cart = None
-
-        self.init_basket()
-
-    # @staticmethod
-    # def create_user(type_):
-    #     return UserFactory.create(type_)
-
-    # @staticmethod
-    # def create_user_tour(type_, name, direction):
-    #     return UserTourFactory.create(type_, name, direction)
-
-    def get_location(self, name):
-        for item in self.catalog.goods_list:
-            if item.name == name:
-                return item
-        return None
-
-    @staticmethod
-    def decode_value(val):
-        val_b = bytes(val.replace('%', '=').replace("+", " "), 'UTF-8')
-        val_decode_str = quopri.decodestring(val_b)
-        return val_decode_str.decode('UTF-8')
-
-    # Получение списка имен Направлений
-    def get_list_directions_names(self):
-        return [elem.public_name for elem in self.directions]
-
-    # Загрузка основных направлений
-    def get_directions_default(self):
-        default_direction_list = [
-            'Прибалтика',
-            'Южное направление',
-            'Дальний Восток',
-            'Центральная Россия',
-            'Север',
-            'Экстрим',
-        ]
-
-        self.directions = [Direction(i) for i in default_direction_list]
 
     # Поиск 'направления по' id или public_name
     @staticmethod
@@ -400,13 +322,84 @@ class Engine:
         # raise Exception(f'Нет направления с id = {id}')
         return False
 
-    def init_user(self):
-        new_user = UserFactory.create()
-        self.users.append(new_user)
-        return new_user
 
-    def init_basket(self):
-        self.cart = Basket(self.directions, self.init_user())
+# порождающий паттерн Абстрактная фабрика - фабрика курсов
+class UserTourFactory:
+    types = {
+        'package': PackageLocation,
+        'bydays': ByDaysLocation,
+    }
+
+    # порождающий паттерн Фабричный метод
+    @classmethod
+    def create(cls, type_, name, direction):
+        return cls.types[type_](name, direction)
+
+
+# Основной интерфейс
+# class Engine:
+#     def __init__(self):
+#         self.directions = None
+#         self.get_directions_default()
+#         self.users = []
+#
+#         self.catalog = Catalog(self.directions)
+#         self.cart = None
+#
+#         self.init_basket()
+#
+#     def get_location(self, name):
+#         for item in self.catalog.goods_list:
+#             if item.name == name:
+#                 return item
+#         return None
+#
+#     @staticmethod
+#     def decode_value(val):
+#         val_b = bytes(val.replace('%', '=').replace("+", " "), 'UTF-8')
+#         val_decode_str = quopri.decodestring(val_b)
+#         return val_decode_str.decode('UTF-8')
+#
+#     # Получение списка имен Направлений
+#     def get_list_directions_names(self):
+#         return [elem.public_name for elem in self.directions]
+#
+#     # Загрузка основных направлений
+#     def get_directions_default(self):
+#         default_direction_list = [
+#             'Прибалтика',
+#             'Южное направление',
+#             'Дальний Восток',
+#             'Центральная Россия',
+#             'Север',
+#             'Экстрим',
+#         ]
+#
+#         self.directions = [Direction(i) for i in default_direction_list]
+#
+#     # Поиск 'направления по' id или public_name
+#     @staticmethod
+#     def find_direction_by_param(list_directions, param):
+#         if type(param) == int:
+#             for item in list_directions:
+#                 if item.id == param:
+#                     # print('item', item.id)
+#                     return item
+#         elif type(param) == str:
+#             for item in list_directions:
+#                 if item.public_name == param:
+#                     # print('item', item.name_public)
+#                     return item
+#         # raise Exception(f'Нет направления с id = {id}')
+#         return False
+#
+#     def init_user(self):
+#         new_user = UserFactory.create()
+#         self.users.append(new_user)
+#         return new_user
+#
+#     def init_basket(self):
+#         self.cart = Basket(self.directions, self.init_user())
 
 
 # порождающий паттерн Синглтон
@@ -447,55 +440,6 @@ class Logger(metaclass=SingletonByName):
 
         with open(file_name, 'a+', encoding='utf-8') as file:
             file.write(self.text)
-
-
-class WorkplaceAdmin(Subject):
-    def __init__(self, site, request):
-        self.site = site
-        self.request = request
-        super().__init__()
-
-    def create_new_direction(self, name_direction):
-        '''Создание новой директории'''
-        # Требуется валидация имени
-        if len(name_direction) > 1:
-            self.site.directions.append(Direction(name_direction))
-        else:
-            print('Имя не соответствует требованиям')
-
-    def delete_direction(self, name_direction):
-        '''Функция удаляет деректорию-направление'''
-        for elem in self.site.directions:
-            if elem.public_name == name_direction:
-                self.site.directions.remove(elem)
-                return
-        print('Такого элемента не существует')
-        return
-
-    def new_location(self, data_list):
-        '''
-        Функция создаёт новый товар
-        Принимает список-кортеж элементов
-        NAME, DIRECTION, PRICE (если нет, то 0)
-        '''
-        elem_index_1 = self.site.find_direction_by_param(self.site.directions, data_list[1])
-        # Формирование DIRECTION. Требуется id из списка
-        if elem_index_1:
-            print(f'Это id direction: {elem_index_1.id}')
-            elem_index_1 = elem_index_1.id
-        else:
-            print(f'Нет направления с id = {elem_index_1}')
-            return
-
-        elem_index_2 = int(data_list[2]) if type(data_list[2]) == int else 0
-        data_list = (data_list[0], elem_index_1, elem_index_2)
-
-        if input("Создать новый объект из данных POST? Да - Y ") == 'Y':
-            result = self.site.catalog.add_product(data_list)
-            self.request['message'] = result[1]
-            if result[0]:
-                self.observers.append(email_notifier)
-                self.observers.append(sms_notifier)
 
 
 if __name__ == '__main__':
