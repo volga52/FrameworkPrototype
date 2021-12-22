@@ -248,8 +248,10 @@ class MapperRegistry:
         if isinstance(obj, Client):
             print("дадада")
             return ClientMapper(connection)
-        #if isinstance(obj, Category):
-            #return CategoryMapper(connection)
+        if isinstance(obj, Direction):
+            return DirectionMapper(connection)
+        if isinstance(obj, Location):
+            return LocationMapper(connection)
 
     @staticmethod
     def get_current_mapper(name):

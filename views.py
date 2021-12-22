@@ -122,7 +122,7 @@ class ClientListView(ListView):
 
     def get_queryset(self):
         mapper = MapperRegistry.get_current_mapper('client')
-        return mapper.all()
+        return set(site.users).union(set(mapper.all()))
 
 
 @AppRoute(routes=routes, url='/location-list/')
