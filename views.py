@@ -1,7 +1,7 @@
 from framework.templator import render
 from patterns.behavioral_patterns import Subject
 
-from patterns.make_patterns import Logger, Direction, UserFactory
+from patterns.make_patterns import Logger, Direction, UserFactory, Location
 from patterns.behavioral_patterns import EmailNotifier, SmsNotifier, BaseSerializer
 from patterns.mappers import MapperRegistry
 from patterns.structural_patterns import AppRoute, Debug
@@ -17,14 +17,6 @@ sms_notifier = SmsNotifier()
 site = Engine()
 logger = Logger('main')
 
-# def super_db():
-#     for elem in site.catalog.goods_list:
-#         elem.mark_new()
-#     UnitOfWork.get_current().commit()
-#
-# super_db()
-# input()
-
 # Элемент для варианта с Декораторами
 routes = {}
 
@@ -39,7 +31,6 @@ class Index:
             и заносит полученный список в request
             для вывода на странице
             '''
-            # list_ = site.find_direction_by_param(site.directions, int(id_)).locations
             list_ = Direction.find_direction_by_param(site.directions, int(id_)).locations
             request_['catalog'] = list_
 
@@ -188,22 +179,34 @@ class WorkplaceAdmin(Subject):
         Принимает список-кортеж элементов
         NAME, DIRECTION, PRICE (если нет, то 0)
         '''
-        # elem_index_1 = self.site.find_direction_by_param(self.site.directions, data_list[1])
+        # Построение параметров для создания Location
+        # Формирование DIRECTION.
         elem_index_1 = Direction.find_direction_by_param(self.site.directions, data_list[1])
-        # Формирование DIRECTION. Требуется id из списка
+        # Требуется id из списка. Проверка
         if elem_index_1:
             print(f'Это id direction: {elem_index_1.id}')
             elem_index_1 = elem_index_1.id
         else:
             print(f'Нет направления с id = {elem_index_1}')
             return
-
+        # формирование Price стоимость введенная, усли ошибка - 0
         elem_index_2 = int(data_list[2]) if type(data_list[2]) == int else 0
-        data_list = (data_list[0], elem_index_1, elem_index_2)
+        # Итоговый кортеж данных. id = 0 Последний элемент Status = 1
+        data_list = (0, data_list[0], elem_index_1, elem_index_2, 1)
 
-        if input("Создать новый объект из данных POST? Да - Y ") == 'Y':
-            result = self.site.catalog.add_product(data_list)
-            self.request['message'] = result[1]
-            if result[0]:
-                self.observers.append(email_notifier)
-                self.observers.append(sms_notifier)
+        if input(f"Создать новый объект из данных {data_list}? Да - Y ") == 'Y':
+            new_obj = Location(*data_list)
+            try:
+                new_obj.mark_new()
+                UnitOfWork.get_current().commit()
+                # Получаем новый элемент из таблицы
+                new_obj = site.catalog.get_location_from_db(new_obj)
+
+                # Обрабатываем в каталоге
+                result = self.site.catalog.add_good(new_obj)
+                self.request['message'] = result[1]
+                if result[0]:
+                    self.observers.append(email_notifier)
+                    self.observers.append(sms_notifier)
+            except:
+                pass

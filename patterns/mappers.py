@@ -181,7 +181,7 @@ class LocationMapper:
         self.cursor.execute(statement, (name,))
         result = self.cursor.fetchone()
         if result:
-            return Client(*result)
+            return Location(*result)
         else:
             raise RecordNotFoundException(f'record with id={id} not found')
 
@@ -269,12 +269,9 @@ class DataBaseWorker:
         mapper = MapperRegistry.get_current_mapper(name_table)
         return mapper.all()
 
-    # @staticmethod
-    # def get_directions_default():
-    #     mapper = DirectionMapper(connection)
-    #     return mapper.all()
-    #
-    # @staticmethod
-    # def get_locations_form_db():
-    #     mapper = LocationMapper(connection)
-    #     return mapper.all()
+    # Получение элемента из таблицы Location по имени
+    @staticmethod
+    def get_location_from_table(name):
+        mapper = LocationMapper(connection)
+        return mapper.find_by_name(name)
+
