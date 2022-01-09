@@ -183,7 +183,7 @@ class LocationMapper:
         if result:
             return Location(*result)
         else:
-            raise RecordNotFoundException(f'record with id={id} not found')
+            raise RecordNotFoundException(f'record with name={name} not found')
 
     def insert(self, obj):
         # debug
@@ -198,17 +198,17 @@ class LocationMapper:
             raise DbCommitException(err.args)
 
     def update(self, obj):
-        statement = f"UPDATE {self.tablename} SET name=? WHERE id=?"
+        statement = f"UPDATE {self.tablename} SET name=? WHERE id_product=?"
         # Где взять obj.id? Добавить в DomainModel? Или добавить когда берем объект из базы
-        self.cursor.execute(statement, (obj.name, obj.id))
+        self.cursor.execute(statement, (obj.name, obj.id_product))
         try:
             self.connection.commit()
         except Exception as err:
             raise DbUpdateException(err.args)
 
     def delete(self, obj):
-        statement = f"DELETE FROM {self.tablename} WHERE id=?"
-        self.cursor.execute(statement, (obj.id,))
+        statement = f"DELETE FROM {self.tablename} WHERE id_product=?"
+        self.cursor.execute(statement, (obj.id_product,))
         try:
             self.connection.commit()
         except Exception as e:
@@ -274,4 +274,3 @@ class DataBaseWorker:
     def get_location_from_table(name):
         mapper = LocationMapper(connection)
         return mapper.find_by_name(name)
-

@@ -31,16 +31,31 @@ class Index:
             и заносит полученный список в request
             для вывода на странице
             '''
-            list_ = Direction.find_direction_by_param(site.directions, int(id_)).locations
+            list_ = Direction.find_direction_by_param(
+                site.directions, int(id_)).locations
             request_['catalog'] = list_
+
+        def add_to_cart(id_, request_):
+            '''
+            Функция добавляет элемент по id в корзину
+            '''
+            id_ = int(id_)
+            add_elem = None
+            for elem in site.catalog.goods_list:
+                if elem.id_product == id_:
+                    add_elem = elem
+            site.cart.goods_list.append(add_elem)
 
         # Список функций обработчиков
         functions_dict = {
             'id_direction': selection,
+            'add_to_cart': add_to_cart,
         }
 
+        # Список товаров
         request['catalog'] = site.catalog.goods_list
 
+        # Список директорий
         directions_list = site.directions
         # Словарь, содержащий данные (словари) из GET-запроса
         get_dict = request.get('data_get')
@@ -60,7 +75,8 @@ class Basket:
 
         directions_list = site.directions
 
-        return '200 OK', render('basket.html', context=request, directions=directions_list)
+        return '200 OK', render('basket.html', context=request,
+                                directions=directions_list)
 
 
 @AppRoute(routes=routes, url='/history/')
@@ -83,6 +99,7 @@ class Admin:
             'new_direction': workplace.create_new_direction,
             'delete_direction': workplace.delete_direction,
             'new_location': workplace.new_location,
+            'delete_loc': workplace.delete_location,
         }
 
         # Словарь - данные POST-запроса
@@ -95,6 +112,7 @@ class Admin:
             workplace.notify()
 
         request['list_directions'] = site.get_list_directions_names()
+        request['list_goods'] = site.catalog.get_list_goods_names()
         return '200 OK', render('admin.html', context=request)
 
 
@@ -184,12 +202,12 @@ class WorkplaceAdmin(Subject):
         elem_index_1 = Direction.find_direction_by_param(self.site.directions, data_list[1])
         # Требуется id из списка. Проверка
         if elem_index_1:
-            print(f'Это id direction: {elem_index_1.id}')
+            # print(f'Это id direction: {elem_index_1.id}')
             elem_index_1 = elem_index_1.id
         else:
             print(f'Нет направления с id = {elem_index_1}')
             return
-        # формирование Price стоимость введенная, усли ошибка - 0
+        # формирование Price стоимость введенная, если ошибка - 0
         elem_index_2 = int(data_list[2]) if type(data_list[2]) == int else 0
         # Итоговый кортеж данных. id = 0 Последний элемент Status = 1
         data_list = (0, data_list[0], elem_index_1, elem_index_2, 1)
@@ -204,9 +222,35 @@ class WorkplaceAdmin(Subject):
 
                 # Обрабатываем в каталоге
                 result = self.site.catalog.add_good(new_obj)
-                self.request['message'] = result[1]
+                self.request['message_CRUD'] = result[1]
                 if result[0]:
                     self.observers.append(email_notifier)
                     self.observers.append(sms_notifier)
             except:
                 pass
+
+    def delete_location(self, name):
+        del_obj = None
+        for elem in self.site.catalog.goods_list:
+            if elem.name == name:
+                del_obj = elem
+                break
+        if del_obj:
+            if input(f'Удалить элемент {type(del_obj)} Да: Y ') == 'Y':
+                try:
+                    # Удаляем из БД
+                    del_obj.mark_removed()
+                    UnitOfWork.get_current().commit()
+                    # Удаляем из каталога
+                    self.site.catalog.goods_list.remove(del_obj)
+                    # Удаляем из списка соответствующей директории
+                    search_direction = Direction.find_direction_by_param(self.site.directions, del_obj.direction)
+                    search_direction.locations.remove(del_obj)
+                    self.request['message_CRUD'] = f'Товар c именем {name} удален'
+                except:
+                    self.request['message_CRUD'] = 'Что-то пошло не так'
+                    raise
+            else:
+                print('Удаление отменено')
+        else:
+            print('Товар не найден')

@@ -130,18 +130,15 @@ class Catalog(KitElem):
     def get_location_from_db(obj):
         return DataBaseWorker.get_location_from_table(obj.name)
 
+    def get_list_goods_names(self):
+        return [elem.name for elem in self.goods_list]
+
 
 class Basket(KitElem):
     def __init__(self, _directions, user):
         super().__init__(_directions)
         self.user = user
 
-    # Получение списка (словарей) товаров для обработки
-    # def get_list_products(self):
-    #     return self.goods_list
-
-    # def add_product(self, data_list):
-    #     self.goods_list.append(data_list)
 
     def get_list_goods(self):
         return self.goods_list

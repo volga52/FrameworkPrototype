@@ -19,6 +19,7 @@ class Framework:
         # получаем адрес, по которому выполнен переход
         path = environ['PATH_INFO']
         print(path)
+        print(environ)
 
         # добавление закрывающего слеша
         if not path.endswith('/'):

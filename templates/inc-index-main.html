@@ -21,7 +21,10 @@
 
                                 <div><b>Наименование</b>: {{item.name}}</div>
                                 <div><b>Стоимость</b>: {{item.price}}</div>
-                                <button class="addToBasket-btn" data-id_product="${this.good.id_product}" name="Hi">Добавить в корзину</button>
+<!--                                <button class="addToBasket-btn" data-id_product="${this.good.id_product}" name="Hi" value="{{item.id_product}}">Добавить в корзину</button>-->
+                                <form method="get">
+                                    <button class="addToBasket-btn" type="submit" name="add_to_cart" value="{{item.id_product}}">Добавить в корзину</button>
+                                </form>
                                 <div>Направление: {{item.name_direction}}</div>
 
                             </div>

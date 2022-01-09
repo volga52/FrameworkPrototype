@@ -24,6 +24,15 @@
     <div class="elem-admin">
         <hr>
         <h3>Работа с товаром</h3>
+
+        <h4>Список товаров</h4>
+        <ul>
+            {% for name in context.list_goods %}
+                <li>{{name}}</li>
+            {% endfor %}
+        </ul>
+
+
         <form method="post">
             <h4>Добавить товар в каталог</h4>
             <input type="text" name="make_name" placeholder="Имя">
@@ -31,7 +40,12 @@
             <input type="text" name="make_price" placeholder="Стоимость">
             <button type="submit">Добавить</button>
         </form>
-        <p>{{context.message}}</p>
+        <form method="post">
+            <h4>Удалить товар</h4>
+            <input type="text" name="delete_loc" placeholder="Наименование Имя">
+            <button type="submit">Удалить</button>
+        </form>
+        <p>{{context.message_CRUD}}</p>
     </div>
 
     <div class="elem-admin">
