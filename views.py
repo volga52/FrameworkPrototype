@@ -39,7 +39,7 @@ class Index:
             '''
             Функция добавляет элемент по id в корзину
             '''
-            if "request_['FETCH_MODE']" == 'navigate':
+            if request_['FETCH_MODE'] == 'navigate':
                 id_ = int(id_)
                 add_elem = None
                 for elem in site.catalog.goods_list:
