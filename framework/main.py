@@ -19,7 +19,7 @@ class Framework:
         # получаем адрес, по которому выполнен переход
         path = environ['PATH_INFO']
         print(path)
-        print(environ)
+        # print(environ)
 
         # добавление закрывающего слеша
         if not path.endswith('/'):
@@ -37,7 +37,13 @@ class Framework:
         # 'POST' - request['data'], 'GET' - request['request_params']
         request[class_request.request_name_agr] = data
 
-        print(f'Нам пришёл {method} запрос: {data}')
+        # Запись источника (для get-запроса)
+        # 'navigate' - соответствует запросу информации
+        # 'no-cors' - из того же источника или повтор
+        fetch_mode = environ['HTTP_SEC_FETCH_MODE']
+        request['FETCH_MODE'] = fetch_mode
+
+        print(f'Нам пришёл {method} запрос: {data}, debug fetch_mode: {fetch_mode}')
 
         # находим нужный контроллер
         # отработка паттерна page controller

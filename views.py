@@ -39,12 +39,13 @@ class Index:
             '''
             Функция добавляет элемент по id в корзину
             '''
-            id_ = int(id_)
-            add_elem = None
-            for elem in site.catalog.goods_list:
-                if elem.id_product == id_:
-                    add_elem = elem
-            site.cart.goods_list.append(add_elem)
+            if "request_['FETCH_MODE']" == 'navigate':
+                id_ = int(id_)
+                add_elem = None
+                for elem in site.catalog.goods_list:
+                    if elem.id_product == id_:
+                        add_elem = elem
+                site.cart.goods_list.append(add_elem)
 
         # Список функций обработчиков
         functions_dict = {
